@@ -21,7 +21,7 @@ pub fn write(writer: anytype, merge_base: []const u8, allocator: std.mem.Allocat
 pub fn PathIterator() type {
     return struct {
         child: std.process.Child,
-        buf_read: std.io.BufferedReader(4096, std.fs.File.Reader),
+        buffered_reader: std.io.BufferedReader(4096, std.fs.File.Reader),
         line: std.ArrayList(u8),
         allocator: std.mem.Allocator,
         done: bool = false,
@@ -37,12 +37,12 @@ pub fn PathIterator() type {
             try child.spawn();
 
             const stdout = child.stdout orelse unreachable;
-            const buf_read = std.io.bufferedReader(stdout.reader());
+            const buffered_reader = std.io.bufferedReader(stdout.reader());
             const line = std.ArrayList(u8).init(allocator);
 
             return .{
                 .child = child,
-                .buf_read = buf_read,
+                .buffered_reader = buffered_reader,
                 .line = line,
                 .allocator = allocator,
             };
@@ -52,8 +52,8 @@ pub fn PathIterator() type {
         pub fn next(self: *@This()) !?[]const u8 {
             if (self.done) return null;
 
-            // The Reader is created on demand from the live buf_read.
-            self.buf_read.reader().streamUntilDelimiter(self.line.writer(), '\n', null) catch |err| switch (err) {
+            // The Reader is created on demand from the live buffered_reader.
+            self.buffered_reader.reader().streamUntilDelimiter(self.line.writer(), '\n', null) catch |err| switch (err) {
                 error.EndOfStream => {
                     _ = try self.child.wait();
                     self.done = true;
