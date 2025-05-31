@@ -15,7 +15,6 @@ pub fn write(ctx: *const context.Context) !void {
     // header
     try w.writeInt(u32, magic, std.builtin.Endian.little); // magic
     try w.writeByte(version); // version
-    // try w.writeByte(1);
 
     // merge base
     try w.writeInt(u32, @intCast(ctx.merge_base.len), std.builtin.Endian.little);
