@@ -6,24 +6,9 @@ on:
 
 jobs:
   test:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest]
-        zig: [0.14.1]
-    runs-on: ${{ matrix.os }}
-
+    runs-on: ubuntu-latest
+    name: Build and Test
     steps:
-      - name: Checkout sources
-        uses: actions/checkout@v4
-
-      - name: Set up Zig ${{ matrix.zig }}
-        uses: mlugg/setup-zig@v1
-        with:
-          version: ${{ matrix.zig }}
-
-      - name: Print compiler version
-        run: zig version
-
-      - name: Run unit tests
-        run: zig build test
+      - uses: actions/checkout@v3
+      - uses: mlugg/setup-zig@v2
+      - run: zig build test
