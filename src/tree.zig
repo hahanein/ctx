@@ -1,5 +1,6 @@
 const std = @import("std");
 
+/// Write the list of files in the current git repository to the given writer.
 pub fn write(writer: anytype, allocator: std.mem.Allocator) !void {
     var child = std.process.Child.init(&.{ "git", "ls-tree", "-r", "--name-only", "HEAD" }, allocator);
     child.stdout_behavior = .Pipe;
@@ -7,7 +8,7 @@ pub fn write(writer: anytype, allocator: std.mem.Allocator) !void {
 
     try child.spawn();
 
-    const stdout = child.stdout.?;
+    const stdout = child.stdout orelse unreachable;
     var reader = stdout.reader();
 
     var buf: [4096]u8 = undefined;

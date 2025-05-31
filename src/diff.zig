@@ -1,5 +1,6 @@
 const std = @import("std");
 
+/// Write the diff to the given writer.
 pub fn write(writer: anytype, merge_base: []const u8, allocator: std.mem.Allocator) !void {
     var child = std.process.Child.init(&.{ "git", "diff", "--relative", "--minimal", "--cached", "--merge-base", merge_base }, allocator);
     child.stdout_behavior = .Pipe;
@@ -7,7 +8,7 @@ pub fn write(writer: anytype, merge_base: []const u8, allocator: std.mem.Allocat
 
     try child.spawn();
 
-    const stdout = child.stdout.?;
+    const stdout = child.stdout orelse unreachable;
     var reader = stdout.reader();
 
     var buf: [4096]u8 = undefined;
@@ -21,6 +22,7 @@ pub fn write(writer: anytype, merge_base: []const u8, allocator: std.mem.Allocat
     _ = try child.wait();
 }
 
+/// An iterator over the paths in the diff.
 pub fn PathIterator() type {
     return struct {
         child: std.process.Child,
@@ -35,6 +37,7 @@ pub fn PathIterator() type {
             );
             child.stdout_behavior = .Pipe;
             child.stderr_behavior = .Ignore;
+
             try child.spawn();
 
             const stdout = child.stdout orelse unreachable;
