@@ -47,7 +47,7 @@ pub fn main() !void {
         var ctx = context.FileSystemContext.init(allocator);
         try storage.read(&ctx.context, allocator);
         const stdout = std.io.getStdOut();
-        try ctx.show(stdout.writer());
+        try ctx.show(stdout.writer(), allocator);
     } else if (std.mem.eql(u8, command, "status")) {
         @panic("TODO: not implemented yet");
     } else if (std.mem.eql(u8, command, "add")) {

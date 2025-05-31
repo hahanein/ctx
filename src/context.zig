@@ -1,5 +1,7 @@
 const std = @import("std");
 
+const tree = @import("tree.zig");
+
 pub const Context = struct {
     paths: std.StringHashMap(void),
     branch: ?[]const u8 = null,
@@ -29,7 +31,15 @@ pub const FileSystemContext = struct {
         };
     }
 
-    pub fn show(self: *FileSystemContext, writer: anytype) !void {
+    pub fn show(self: *FileSystemContext, writer: anytype, allocator: std.mem.Allocator) !void {
+        // Write directory overview
+        try writer.writeAll("# Directory view\n\n```\n");
+        try tree.write(writer, allocator);
+        try writer.writeAll("```\n\n");
+
+        // Write files
+        try writer.writeAll("# Files\n\n");
+
         var it = self.context.paths.keyIterator();
         while (it.next()) |path| {
             var file = try std.fs.cwd().openFile(path.*, .{});
