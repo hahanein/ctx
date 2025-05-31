@@ -6,6 +6,7 @@ const file_name = ".ctx";
 const magic = 0x4354_5800; // "CTX\0"
 const version = 2;
 
+/// Writes the context to the file.
 pub fn write(ctx: *const context.Context) !void {
     const file = try std.fs.cwd().createFile(file_name, .{ .truncate = true });
     defer file.close();
@@ -31,6 +32,7 @@ pub fn write(ctx: *const context.Context) !void {
     }
 }
 
+/// Reads the context from the file.
 pub fn read(ctx: *context.Context, allocator: std.mem.Allocator) !void {
     const file = std.fs.cwd().openFile(file_name, .{}) catch return;
     defer file.close();
