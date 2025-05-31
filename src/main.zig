@@ -14,7 +14,7 @@ const usage =
     \\  show                   Show context
     \\  add [<pathspec>...]    Add files
     \\  rm [<pathspec>...]     Remove files
-    \\  merge-base [<commit>]  Set a merge base to create a diff
+    \\  merge-base [<commit>]  Set merge base
     \\  help                   Show this help message
     \\
 ;

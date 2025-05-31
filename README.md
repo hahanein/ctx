@@ -19,14 +19,14 @@ ctx show | wl-copy            # Copy Markdown context to clipboard
 
 ## Commands
 
-| Command                 | Description              |
-| ----------------------- | ------------------------ |
-| `init`                  | Create a new `.ctx` file |
-| `add [<pathspec>...]`   | Add one or more files    |
-| `rm [<pathspec>...]`    | Remove files             |
-| `merge-base [<commit>]` | Set a merge base         |
-| `show`                  | Print the stored context |
-| `help`                  | Display usage            |
+| Command                 | Description        |
+| ----------------------- | ------------------ |
+| `init`                  | Create new context |
+| `add [<pathspec>...]`   | Add files          |
+| `rm [<pathspec>...]`    | Remove files       |
+| `merge-base [<commit>]` | Set merge base     |
+| `show`                  | Show context       |
+| `help`                  | Show help message  |
 
 Exit codes: `0` success, `1` failure, `2` usage error.
 
