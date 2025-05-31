@@ -4,7 +4,7 @@ const context = @import("./context.zig");
 
 const file_name = ".ctx";
 const magic = 0x4354_5800; // "CTX\0"
-const version = 3;
+const version = 4;
 
 /// Writes the context to the file.
 pub fn write(ctx: *const context.Context) !void {
@@ -22,7 +22,7 @@ pub fn write(ctx: *const context.Context) !void {
     try w.writeAll(ctx.merge_base);
 
     // paths
-    try w.writeInt(u32, @intCast(ctx.paths.count()), std.builtin.Endian.little);
+    try w.writeInt(u64, @intCast(ctx.paths.count()), std.builtin.Endian.little);
     var it = ctx.paths.keyIterator();
     while (it.next()) |path| {
         try w.writeInt(u32, @intCast(path.*.len), std.builtin.Endian.little);
@@ -32,7 +32,7 @@ pub fn write(ctx: *const context.Context) !void {
 
 /// Reads the context from the file.
 pub fn read(ctx: *context.Context, allocator: std.mem.Allocator) !void {
-    const file = std.fs.cwd().openFile(file_name, .{}) catch return;
+    const file = try std.fs.cwd().openFile(file_name, .{});
     defer file.close();
     const reader = file.reader();
 
@@ -52,8 +52,8 @@ pub fn read(ctx: *context.Context, allocator: std.mem.Allocator) !void {
     ctx.merge_base = buf;
 
     // paths
-    const count = try reader.readInt(u32, std.builtin.Endian.little);
-    var i: u32 = 0;
+    const count = try reader.readInt(u64, std.builtin.Endian.little);
+    var i: u64 = 0;
     while (i < count) : (i += 1) {
         const n_len = try reader.readInt(u32, std.builtin.Endian.little);
         const path = try allocator.alloc(u8, n_len);
