@@ -1,6 +1,6 @@
 # ctx
 
-A small CLI for building prompt context files for large-language models.
+A command line tool for building prompt context files for large-language models.
 
 ## Build
 

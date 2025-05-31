@@ -4,7 +4,8 @@ const storage = @import("storage.zig");
 
 /// Usage message
 const usage =
-    \\ctx - A command line tool for creating context
+    \\ctx - A command line tool for building prompt context files for
+    \\large-language models.
     \\
     \\Usage: ctx <command> [arguments]
     \\
