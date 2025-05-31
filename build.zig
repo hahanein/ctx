@@ -45,3 +45,4 @@ pub fn build(b: *std.Build) void {
     const check = b.step("check", "Check if ctx compiles");
     check.dependOn(&exe_check.step);
 }
+

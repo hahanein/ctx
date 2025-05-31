@@ -27,3 +27,4 @@ pub const Context = struct {
         for (paths) |p| _ = self.files.remove(p);
     }
 };
+
