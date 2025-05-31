@@ -9,12 +9,12 @@ const usage =
     \\Usage: ctx <command> [arguments]
     \\
     \\Commands:
-    \\  init             Create new context
-    \\  show             Show context
-    \\  status           Show context status
-    \\  add <file>...    Add files
-    \\  rm <file>...     Remove files
-    \\  help             Show this help message
+    \\  init                   Create new context
+    \\  show                   Show context
+    \\  add [<pathspec>...]    Add files
+    \\  rm [<pathspec>...]     Remove files
+    \\  merge-base [<commit>]  Set a merge base to create a diff
+    \\  help                   Show this help message
     \\
 ;
 
@@ -48,8 +48,6 @@ pub fn main() !void {
         try storage.read(&ctx.context, allocator);
         const stdout = std.io.getStdOut();
         try ctx.show(stdout.writer(), allocator);
-    } else if (std.mem.eql(u8, command, "status")) {
-        @panic("TODO: not implemented yet");
     } else if (std.mem.eql(u8, command, "add")) {
         var ctx = context.Context.init(allocator);
         try storage.read(&ctx, allocator);
@@ -59,6 +57,11 @@ pub fn main() !void {
         var ctx = context.Context.init(allocator);
         try storage.read(&ctx, allocator);
         ctx.rm(args[2..]);
+        try storage.write(&ctx);
+    } else if (std.mem.eql(u8, command, "merge-base")) {
+        var ctx = context.Context.init(allocator);
+        try storage.read(&ctx, allocator);
+        ctx.merge_base = if (args.len > 2) args[2] else "";
         try storage.write(&ctx);
     } else if (std.mem.eql(u8, command, "help")) {
         std.debug.print("{s}", .{usage});

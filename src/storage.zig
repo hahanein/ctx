@@ -4,7 +4,7 @@ const context = @import("./context.zig");
 
 const file_name = ".ctx";
 const magic = 0x4354_5800; // "CTX\0"
-const version = 2;
+const version = 3;
 
 /// Writes the context to the file.
 pub fn write(ctx: *const context.Context) !void {
@@ -15,13 +15,11 @@ pub fn write(ctx: *const context.Context) !void {
     // header
     try w.writeInt(u32, magic, std.builtin.Endian.little); // magic
     try w.writeByte(version); // version
-    try w.writeByte(if (ctx.branch.len == 0) 0 else 1);
+    // try w.writeByte(1);
 
-    // optional branch
-    if (ctx.branch.len > 0) {
-        try w.writeInt(u32, @intCast(ctx.branch.len), std.builtin.Endian.little);
-        try w.writeAll(ctx.branch);
-    }
+    // merge base
+    try w.writeInt(u32, @intCast(ctx.merge_base.len), std.builtin.Endian.little);
+    try w.writeAll(ctx.merge_base);
 
     // paths
     try w.writeInt(u32, @intCast(ctx.paths.count()), std.builtin.Endian.little);
@@ -36,34 +34,30 @@ pub fn write(ctx: *const context.Context) !void {
 pub fn read(ctx: *context.Context, allocator: std.mem.Allocator) !void {
     const file = std.fs.cwd().openFile(file_name, .{}) catch return;
     defer file.close();
-    const r = file.reader();
+    const reader = file.reader();
 
     // validate header
-    const file_magic = try r.readInt(u32, std.builtin.Endian.little);
+    const file_magic = try reader.readInt(u32, std.builtin.Endian.little);
     if (file_magic != magic) return error.InvalidFormat;
-    const version_ = try r.readByte();
+    const version_ = try reader.readByte();
     if (version_ != version) return error.UnsupportedVersion;
-    const has_branch = try r.readByte() != 0;
 
     // reset context
     ctx.paths.clearRetainingCapacity();
-    ctx.branch = "";
 
-    // branch
-    if (has_branch) {
-        const b_len = try r.readInt(u32, std.builtin.Endian.little);
-        const buf = try allocator.alloc(u8, b_len);
-        try r.readNoEof(buf);
-        ctx.branch = buf;
-    }
+    // merge base
+    const b_len = try reader.readInt(u32, std.builtin.Endian.little);
+    const buf = try allocator.alloc(u8, b_len);
+    try reader.readNoEof(buf);
+    ctx.merge_base = buf;
 
     // paths
-    const count = try r.readInt(u32, std.builtin.Endian.little);
+    const count = try reader.readInt(u32, std.builtin.Endian.little);
     var i: u32 = 0;
     while (i < count) : (i += 1) {
-        const n_len = try r.readInt(u32, std.builtin.Endian.little);
+        const n_len = try reader.readInt(u32, std.builtin.Endian.little);
         const path = try allocator.alloc(u8, n_len);
-        try r.readNoEof(path);
+        try reader.readNoEof(path);
         _ = try ctx.paths.put(path, {});
     }
 }

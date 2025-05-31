@@ -1,15 +1,16 @@
 const std = @import("std");
 
 const tree = @import("tree.zig");
+const diff = @import("diff.zig");
 
 pub const Context = struct {
     paths: std.StringHashMap(void),
-    branch: []const u8 = "",
+    merge_base: []const u8 = "",
 
     pub fn init(allocator: std.mem.Allocator) Context {
         return .{
             .paths = std.StringHashMap(void).init(allocator),
-            .branch = "",
+            .merge_base = "",
         };
     }
 
@@ -32,6 +33,13 @@ pub const FileSystemContext = struct {
     }
 
     pub fn show(self: *FileSystemContext, writer: anytype, allocator: std.mem.Allocator) !void {
+        // Write diff
+        if (self.context.merge_base.len > 0) {
+            try writer.writeAll("# Diff\n\n```diff\n");
+            try diff.write(writer, self.context.merge_base, allocator);
+            try writer.writeAll("```\n\n");
+        }
+
         // Write directory overview
         try writer.writeAll("# Directory view\n\n```\n");
         try tree.write(writer, allocator);
@@ -40,7 +48,13 @@ pub const FileSystemContext = struct {
         // Write files
         try writer.writeAll("# Files\n\n");
 
-        var it = self.context.paths.keyIterator();
+        var clone = try self.context.paths.clone();
+        if (self.context.merge_base.len > 0) {
+            var it_ = try diff.PathIterator().init(self.context.merge_base, allocator);
+            while (try it_.next()) |path| _ = try clone.put(path, {});
+        }
+
+        var it = clone.keyIterator();
         while (it.next()) |path| {
             var file = try std.fs.cwd().openFile(path.*, .{});
             defer file.close();
