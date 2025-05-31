@@ -5,7 +5,7 @@ A small CLI for building prompt context files for large-language models.
 ## Build
 
 ```bash
-zig build -Drelease-fast
+zig build -Doptimize=ReleaseFast
 ```
 
 ## Typical workflow
