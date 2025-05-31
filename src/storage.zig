@@ -23,12 +23,12 @@ pub fn write(ctx: *const context.Context) !void {
         try w.writeAll(b);
     }
 
-    // files
-    try w.writeInt(u32, @intCast(ctx.files.count()), std.builtin.Endian.little);
-    var it = ctx.files.keyIterator();
-    while (it.next()) |name| {
-        try w.writeInt(u32, @intCast(name.*.len), std.builtin.Endian.little);
-        try w.writeAll(name.*);
+    // paths
+    try w.writeInt(u32, @intCast(ctx.paths.count()), std.builtin.Endian.little);
+    var it = ctx.paths.keyIterator();
+    while (it.next()) |path| {
+        try w.writeInt(u32, @intCast(path.*.len), std.builtin.Endian.little);
+        try w.writeAll(path.*);
     }
 }
 
@@ -46,7 +46,7 @@ pub fn read(ctx: *context.Context, allocator: std.mem.Allocator) !void {
     const has_branch = try r.readByte() != 0;
 
     // reset context
-    ctx.files.clearRetainingCapacity();
+    ctx.paths.clearRetainingCapacity();
     ctx.branch = null;
 
     // branch
@@ -57,14 +57,14 @@ pub fn read(ctx: *context.Context, allocator: std.mem.Allocator) !void {
         ctx.branch = buf;
     }
 
-    // files
+    // paths
     const count = try r.readInt(u32, std.builtin.Endian.little);
     var i: u32 = 0;
     while (i < count) : (i += 1) {
         const n_len = try r.readInt(u32, std.builtin.Endian.little);
-        const name = try allocator.alloc(u8, n_len);
-        try r.readNoEof(name);
-        _ = try ctx.files.put(name, {});
+        const path = try allocator.alloc(u8, n_len);
+        try r.readNoEof(path);
+        _ = try ctx.paths.put(path, {});
     }
 }
 

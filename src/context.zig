@@ -1,30 +1,49 @@
 const std = @import("std");
 
 pub const Context = struct {
-    files: std.StringHashMap(void),
+    paths: std.StringHashMap(void),
     branch: ?[]const u8 = null,
 
-    pub fn init(alloc: std.mem.Allocator) Context {
+    pub fn init(allocator: std.mem.Allocator) Context {
         return .{
-            .files = std.StringHashMap(void).init(alloc),
+            .paths = std.StringHashMap(void).init(allocator),
             .branch = null,
         };
     }
 
-    pub fn merge(self: *Context, branch: []const u8) void {
-        self.branch = branch;
-    }
-
-    pub fn merge_abort(self: *Context) void {
-        self.branch = null;
-    }
-
     pub fn add(self: *Context, paths: []const []const u8) !void {
-        for (paths) |p| _ = try self.files.put(p, {});
+        for (paths) |path| _ = try self.paths.put(path, {});
     }
 
     pub fn rm(self: *Context, paths: []const []const u8) void {
-        for (paths) |p| _ = self.files.remove(p);
+        for (paths) |path| _ = self.paths.remove(path);
+    }
+};
+
+pub const FileSystemContext = struct {
+    context: Context,
+
+    pub fn init(allocator: std.mem.Allocator) FileSystemContext {
+        return .{
+            .context = Context.init(allocator),
+        };
+    }
+
+    pub fn show(self: *FileSystemContext, writer: anytype) !void {
+        var it = self.context.paths.keyIterator();
+        while (it.next()) |path| {
+            var file = try std.fs.cwd().openFile(path.*, .{});
+            defer file.close();
+
+            var reader = file.reader();
+            var buffer: [1024]u8 = undefined;
+
+            while (true) {
+                const bytes_read = try reader.read(&buffer);
+                if (bytes_read == 0) break;
+                try writer.writeAll(buffer[0..bytes_read]);
+            }
+        }
     }
 };
 

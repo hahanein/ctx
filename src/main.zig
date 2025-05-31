@@ -44,7 +44,10 @@ pub fn main() !void {
     if (std.mem.eql(u8, command, "init")) {
         try storage.write(&context.Context.init(allocator));
     } else if (std.mem.eql(u8, command, "show")) {
-        @panic("TODO: not implemented yet");
+        var ctx = context.FileSystemContext.init(allocator);
+        try storage.read(&ctx.context, allocator);
+        const stdout = std.io.getStdOut();
+        try ctx.show(stdout);
     } else if (std.mem.eql(u8, command, "status")) {
         @panic("TODO: not implemented yet");
     } else if (std.mem.eql(u8, command, "add")) {
