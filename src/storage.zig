@@ -15,12 +15,12 @@ pub fn write(ctx: *const context.Context) !void {
     // header
     try w.writeInt(u32, magic, std.builtin.Endian.little); // magic
     try w.writeByte(version); // version
-    try w.writeByte(if (ctx.branch == null) 0 else 1);
+    try w.writeByte(if (ctx.branch.len == 0) 0 else 1);
 
     // optional branch
-    if (ctx.branch) |b| {
-        try w.writeInt(u32, @intCast(b.len), std.builtin.Endian.little);
-        try w.writeAll(b);
+    if (ctx.branch.len > 0) {
+        try w.writeInt(u32, @intCast(ctx.branch.len), std.builtin.Endian.little);
+        try w.writeAll(ctx.branch);
     }
 
     // paths
@@ -47,7 +47,7 @@ pub fn read(ctx: *context.Context, allocator: std.mem.Allocator) !void {
 
     // reset context
     ctx.paths.clearRetainingCapacity();
-    ctx.branch = null;
+    ctx.branch = "";
 
     // branch
     if (has_branch) {

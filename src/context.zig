@@ -4,12 +4,12 @@ const tree = @import("tree.zig");
 
 pub const Context = struct {
     paths: std.StringHashMap(void),
-    branch: ?[]const u8 = null,
+    branch: []const u8 = "",
 
     pub fn init(allocator: std.mem.Allocator) Context {
         return .{
             .paths = std.StringHashMap(void).init(allocator),
-            .branch = null,
+            .branch = "",
         };
     }
 
