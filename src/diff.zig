@@ -9,15 +9,10 @@ pub fn write(writer: anytype, merge_base: []const u8, allocator: std.mem.Allocat
     try child.spawn();
 
     const stdout = child.stdout orelse unreachable;
-    var reader = stdout.reader();
+    const reader = stdout.reader();
 
-    var buf: [4096]u8 = undefined;
-
-    while (true) {
-        const read_len = try reader.read(&buf);
-        if (read_len == 0) break;
-        try writer.writeAll(buf[0..read_len]);
-    }
+    var fifo = std.fifo.LinearFifo(u8, .{ .Static = 4096 }).init();
+    try fifo.pump(reader, writer);
 
     _ = try child.wait();
 }
@@ -27,6 +22,7 @@ pub fn PathIterator() type {
     return struct {
         child: std.process.Child,
         buf_read: std.io.BufferedReader(4096, std.fs.File.Reader),
+        line: std.ArrayList(u8),
         allocator: std.mem.Allocator,
         done: bool = false,
 
@@ -42,10 +38,12 @@ pub fn PathIterator() type {
 
             const stdout = child.stdout orelse unreachable;
             const buf_read = std.io.bufferedReader(stdout.reader());
+            const line = std.ArrayList(u8).init(allocator);
 
             return .{
                 .child = child,
                 .buf_read = buf_read,
+                .line = line,
                 .allocator = allocator,
             };
         }
@@ -54,9 +52,8 @@ pub fn PathIterator() type {
         pub fn next(self: *@This()) !?[]const u8 {
             if (self.done) return null;
 
-            var line = std.ArrayList(u8).init(self.allocator);
             // The Reader is created on demand from the live buf_read.
-            self.buf_read.reader().streamUntilDelimiter(line.writer(), '\n', null) catch |err| switch (err) {
+            self.buf_read.reader().streamUntilDelimiter(self.line.writer(), '\n', null) catch |err| switch (err) {
                 error.EndOfStream => {
                     _ = try self.child.wait();
                     self.done = true;
@@ -66,12 +63,12 @@ pub fn PathIterator() type {
             };
 
             // Trim trailing newline if present.
-            if (line.items.len > 0 and line.items[line.items.len - 1] == '\n') {
-                line.items.len -= 1;
+            if (self.line.items.len > 0 and self.line.items[self.line.items.len - 1] == '\n') {
+                self.line.items.len -= 1;
             }
 
             // Turn the ArrayList into an owned slice and hand it off.
-            return try line.toOwnedSlice();
+            return try self.line.toOwnedSlice();
         }
     };
 }

@@ -9,15 +9,10 @@ pub fn write(writer: anytype, allocator: std.mem.Allocator) !void {
     try child.spawn();
 
     const stdout = child.stdout orelse unreachable;
-    var reader = stdout.reader();
+    const reader = stdout.reader();
 
-    var buf: [4096]u8 = undefined;
-
-    while (true) {
-        const read_len = try reader.read(&buf);
-        if (read_len == 0) break;
-        try writer.writeAll(buf[0..read_len]);
-    }
+    var fifo = std.fifo.LinearFifo(u8, .{ .Static = 4096 }).init();
+    try fifo.pump(reader, writer);
 
     _ = try child.wait();
 }

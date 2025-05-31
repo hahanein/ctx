@@ -65,14 +65,10 @@ pub const FileSystemContext = struct {
 
             try std.fmt.format(writer, "```{s} path={s}\n", .{ tag, path.* });
 
-            var reader = file.reader();
-            var buffer: [1024]u8 = undefined;
+            const reader = file.reader();
 
-            while (true) {
-                const bytes_read = try reader.read(&buffer);
-                if (bytes_read == 0) break;
-                try writer.writeAll(buffer[0..bytes_read]);
-            }
+            var fifo = std.fifo.LinearFifo(u8, .{ .Static = 4096 }).init();
+            try fifo.pump(reader, writer);
 
             try writer.writeAll("```\n\n");
         }
