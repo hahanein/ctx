@@ -1,5 +1,6 @@
 const std = @import("std");
 const context = @import("context.zig");
+const storage = @import("storage.zig");
 
 const usage =
     \\ctx - A git-style command line tool
@@ -9,53 +10,44 @@ const usage =
     \\Commands:
     \\  init             Create new context
     \\  add <file>...    Add files
+    \\  rm <file>...     Remove files
     \\  help             Show this help message
     \\
 ;
 
+const status = struct {
+    pub const success = 0;
+    pub const failure = 1;
+    pub const usage = 2;
+};
+
 pub fn main() !void {
-    const allocator = std.heap.page_allocator;
-    const args = try std.process.argsAlloc(allocator);
-    defer std.process.argsFree(allocator, args);
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+
+    var arena = std.heap.ArenaAllocator.init(gpa.allocator());
+    defer arena.deinit();
+
+    const alloc = arena.allocator();
+    const args = try std.process.argsAlloc(alloc);
 
     if (args.len < 2) {
         std.debug.print("{s}", .{usage});
-        return;
+        std.process.exit(status.usage);
     }
 
     const command = args[1];
     if (std.mem.eql(u8, command, "init")) {
-        try handleInit(allocator);
+        try storage.write(&context.Context.init(alloc));
     } else if (std.mem.eql(u8, command, "add")) {
-        if (args.len < 3) {
-            std.debug.print("Error: no files specified\nUsage: ctx add <file>...\n", .{});
-            return;
-        }
-        try handleAdd(allocator, args[2..]);
-    } else if (std.mem.eql(u8, command, "help") or std.mem.eql(u8, command, "-h") or std.mem.eql(u8, command, "--help")) {
+        @panic("TODO: not implemented yet");
+    } else if (std.mem.eql(u8, command, "rm")) {
+        @panic("TODO: not implemented yet");
+    } else if (std.mem.eql(u8, command, "help")) {
         std.debug.print("{s}", .{usage});
     } else {
         std.debug.print("Unknown command: {s}\n{s}", .{ command, usage });
+        std.process.exit(status.usage);
     }
 }
 
-fn handleInit(allocator: *std.mem.Allocator) !void {
-    var ctx = context.Context.init(allocator);
-    defer ctx.deinit();
-
-    try ctx.write();
-}
-
-fn handleAdd(allocator: *std.mem.Allocator, files: []const []const u8) !void {
-    var ctx = context.Context.init(allocator);
-    defer ctx.deinit();
-
-    _ = ctx.read(allocator) catch {};
-
-    try ctx.add(files);
-    try ctx.write();
-
-    for (files) |file| {
-        std.debug.print("Adding file: {s}\n", .{file});
-    }
-}
