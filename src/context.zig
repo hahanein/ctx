@@ -49,9 +49,10 @@ pub const FileSystemContext = struct {
         try writer.writeAll("# Files\n\n");
 
         var clone = try self.context.paths.clone();
+        defer clone.deinit();
         if (self.context.merge_base.len > 0) {
-            var it_ = try diff.PathIterator().init(self.context.merge_base, allocator);
-            while (try it_.next()) |path| _ = try clone.put(path, {});
+            var it = try diff.PathIterator().init(self.context.merge_base, allocator);
+            while (try it.next()) |path| _ = try clone.put(path, {});
         }
 
         var it = clone.keyIterator();
