@@ -35,6 +35,11 @@ pub const FileSystemContext = struct {
             var file = try std.fs.cwd().openFile(path.*, .{});
             defer file.close();
 
+            const extension = std.fs.path.extension(path.*);
+            const tag = if (extension.len == 0) "text" else extension[1..];
+
+            try std.fmt.format(writer, "```{s} path={s}\n", .{ tag, path.* });
+
             var reader = file.reader();
             var buffer: [1024]u8 = undefined;
 
@@ -43,6 +48,8 @@ pub const FileSystemContext = struct {
                 if (bytes_read == 0) break;
                 try writer.writeAll(buffer[0..bytes_read]);
             }
+
+            try writer.writeAll("```\n\n");
         }
     }
 };
