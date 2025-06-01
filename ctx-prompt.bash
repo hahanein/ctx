@@ -12,12 +12,6 @@ __ctx_in_git_repo() {
 	git rev-parse --git-dir >/dev/null 2>&1
 }
 
-# complete paths
-__ctx_complete_paths() {
-	local IFS=$'\n'
-	mapfile -t COMPREPLY < <(compgen -f -- "$cur")
-}
-
 # complete refs (branches, tags, remotes)
 __ctx_complete_git_refs() {
 	COMPREPLY=()
@@ -44,7 +38,6 @@ _ctx() {
 
 	# argument completion by verb
 	case "${COMP_WORDS[1]}" in
-	add | rm) __ctx_complete_paths ;;      # files / dirs
 	merge-base) __ctx_complete_git_refs ;; # git refs
 	*) COMPREPLY=() ;;                     # nothing more
 	esac
