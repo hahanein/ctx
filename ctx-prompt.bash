@@ -5,7 +5,7 @@
 # --------------------------------- helpers -----------------------------------
 
 # top-level verbs
-__ctx_commands="init show add rm merge-base help"
+__ctx_commands="init show status add rm merge-base help"
 
 # true if we’re inside a Git repo
 __ctx_in_git_repo() {
