@@ -1,13 +1,13 @@
 const std = @import("std");
 
-const context = @import("./context.zig");
+const Context = @import("./Context.zig");
 
 const file_name = ".ctx";
 const magic = 0x4354_5800; // "CTX\0"
 const version = 4;
 
 /// Writes the context to the file.
-pub fn write(ctx: *const context.Context) !void {
+pub fn write(ctx: *const Context) !void {
     const file = try std.fs.cwd().createFile(file_name, .{ .truncate = true });
     defer file.close();
     const w = file.writer();
@@ -30,7 +30,7 @@ pub fn write(ctx: *const context.Context) !void {
 }
 
 /// Reads the context from the file.
-pub fn read(ctx: *context.Context, allocator: std.mem.Allocator) !void {
+pub fn read(ctx: *Context, allocator: std.mem.Allocator) !void {
     const file = try std.fs.cwd().openFile(file_name, .{});
     defer file.close();
     const reader = file.reader();

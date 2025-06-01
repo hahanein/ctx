@@ -1,15 +1,15 @@
 const std = @import("std");
 
-const context = @import("context.zig");
+const Context = @import("Context.zig");
 const renderer = @import("renderer.zig");
 
-pub fn write(writer: anytype, ctx: *context.Context, allocator: std.mem.Allocator) !void {
-    var counter = CountingWriter().init();
+pub fn write(writer: anytype, ctx: *Context, allocator: std.mem.Allocator) !void {
+    var counter = TokenCounter().init();
     try renderer.write(counter.writer(), ctx, allocator);
-    try std.fmt.format(writer, "Estimated tokens: {}\n", .{counter.tokens()});
+    try std.fmt.format(writer, "Estimated token count: {}\n", .{counter.tokens()});
 }
 
-fn CountingWriter() type {
+fn TokenCounter() type {
     return struct {
         count: usize = 0,
 
@@ -18,8 +18,9 @@ fn CountingWriter() type {
         }
 
         pub fn tokens(self: *@This()) usize {
-            // One token generally corresponds to ~4 characters of text for
-            // common English text. And we add 3 to round up.
+            // One token generally corresponds to about 4 characters of text
+            // for common English text.
+            // We add 3 to round up.
             return (self.count + 3) / 4;
         }
 

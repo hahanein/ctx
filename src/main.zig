@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const context = @import("context.zig");
+const Context = @import("Context.zig");
 const storage = @import("storage.zig");
 const renderer = @import("renderer.zig");
 const status = @import("status.zig");
@@ -45,38 +45,39 @@ pub fn main() !void {
         std.process.exit(exit.usage);
     }
 
-    const command = args[1];
-    if (std.mem.eql(u8, command, "init")) {
-        try storage.write(&context.Context.init(allocator));
-    } else if (std.mem.eql(u8, command, "show")) {
-        var ctx = context.Context.init(allocator);
+    const cmd = args[1];
+    const cmd_args = args[2..];
+    if (std.mem.eql(u8, cmd, "init")) {
+        try storage.write(&Context.init(allocator));
+    } else if (std.mem.eql(u8, cmd, "show")) {
+        var ctx = Context.init(allocator);
         try storage.read(&ctx, allocator);
         const stdout = std.io.getStdOut();
         try renderer.write(stdout.writer(), &ctx, allocator);
-    } else if (std.mem.eql(u8, command, "add")) {
-        var ctx = context.Context.init(allocator);
+    } else if (std.mem.eql(u8, cmd, "add")) {
+        var ctx = Context.init(allocator);
         try storage.read(&ctx, allocator);
-        try ctx.add(args[2..]);
+        try ctx.add(cmd_args);
         try storage.write(&ctx);
-    } else if (std.mem.eql(u8, command, "rm")) {
-        var ctx = context.Context.init(allocator);
+    } else if (std.mem.eql(u8, cmd, "rm")) {
+        var ctx = Context.init(allocator);
         try storage.read(&ctx, allocator);
-        ctx.rm(args[2..]);
+        ctx.rm(cmd_args);
         try storage.write(&ctx);
-    } else if (std.mem.eql(u8, command, "merge-base")) {
-        var ctx = context.Context.init(allocator);
+    } else if (std.mem.eql(u8, cmd, "merge-base")) {
+        var ctx = Context.init(allocator);
         try storage.read(&ctx, allocator);
         ctx.merge_base = if (args.len > 2) args[2] else "";
         try storage.write(&ctx);
-    } else if (std.mem.eql(u8, command, "status")) {
-        var ctx = context.Context.init(allocator);
+    } else if (std.mem.eql(u8, cmd, "status")) {
+        var ctx = Context.init(allocator);
         try storage.read(&ctx, allocator);
         const stdout = std.io.getStdOut();
         try status.write(stdout.writer(), &ctx, allocator);
-    } else if (std.mem.eql(u8, command, "help")) {
+    } else if (std.mem.eql(u8, cmd, "help")) {
         std.debug.print("{s}", .{usage});
     } else {
-        std.debug.print("Unknown command: {s}\n{s}", .{ command, usage });
+        std.debug.print("Unknown command: {s}\n{s}", .{ cmd, usage });
         std.process.exit(exit.usage);
     }
 

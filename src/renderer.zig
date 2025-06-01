@@ -1,11 +1,11 @@
 const std = @import("std");
 
-const context = @import("context.zig");
+const Context = @import("Context.zig");
 const diff = @import("diff.zig");
 const tree = @import("tree.zig");
 
 /// Write the context to the given writer.
-pub fn write(writer: anytype, ctx: *context.Context, allocator: std.mem.Allocator) !void {
+pub fn write(writer: anytype, ctx: *Context, allocator: std.mem.Allocator) !void {
     // Write diff
     if (ctx.merge_base.len > 0) {
         try writer.writeAll("# Diff\n\n```diff\n");
