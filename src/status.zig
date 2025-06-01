@@ -18,7 +18,9 @@ fn CountingWriter() type {
         }
 
         pub fn tokens(self: *@This()) usize {
-            return self.count / 4;
+            // One token generally corresponds to ~4 characters of text for
+            // common English text. And we add 3 to round up.
+            return (self.count + 3) / 4;
         }
 
         pub fn writeImpl(self: *@This(), data: []const u8) error{}!usize {
