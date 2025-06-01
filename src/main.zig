@@ -1,6 +1,8 @@
 const std = @import("std");
+
 const context = @import("context.zig");
 const storage = @import("storage.zig");
+const renderer = @import("renderer.zig");
 
 /// Usage message
 const usage =
@@ -45,10 +47,10 @@ pub fn main() !void {
     if (std.mem.eql(u8, command, "init")) {
         try storage.write(&context.Context.init(allocator));
     } else if (std.mem.eql(u8, command, "show")) {
-        var ctx = context.FileSystemContext.init(allocator);
-        try storage.read(&ctx.context, allocator);
+        var ctx = context.Context.init(allocator);
+        try storage.read(&ctx, allocator);
         const stdout = std.io.getStdOut();
-        try ctx.show(stdout.writer(), allocator);
+        try renderer.write(stdout.writer(), &ctx, allocator);
     } else if (std.mem.eql(u8, command, "add")) {
         var ctx = context.Context.init(allocator);
         try storage.read(&ctx, allocator);
@@ -70,5 +72,7 @@ pub fn main() !void {
         std.debug.print("Unknown command: {s}\n{s}", .{ command, usage });
         std.process.exit(status.usage);
     }
+
+    std.process.exit(status.success);
 }
 
