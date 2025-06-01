@@ -3,6 +3,7 @@ const std = @import("std");
 const context = @import("context.zig");
 const storage = @import("storage.zig");
 const renderer = @import("renderer.zig");
+const status = @import("status.zig");
 
 /// Usage message
 const usage =
@@ -17,12 +18,13 @@ const usage =
     \\  add [<pathspec>...]    Add files
     \\  rm [<pathspec>...]     Remove files
     \\  merge-base [<commit>]  Set merge base
+    \\  status                 Show context status
     \\  help                   Show this help message
     \\
 ;
 
 /// Exit status codes
-const status = struct {
+const exit = struct {
     pub const success = 0;
     pub const failure = 1;
     pub const usage = 2;
@@ -40,7 +42,7 @@ pub fn main() !void {
 
     if (args.len < 2) {
         std.debug.print("{s}", .{usage});
-        std.process.exit(status.usage);
+        std.process.exit(exit.usage);
     }
 
     const command = args[1];
@@ -66,13 +68,18 @@ pub fn main() !void {
         try storage.read(&ctx, allocator);
         ctx.merge_base = if (args.len > 2) args[2] else "";
         try storage.write(&ctx);
+    } else if (std.mem.eql(u8, command, "status")) {
+        var ctx = context.Context.init(allocator);
+        try storage.read(&ctx, allocator);
+        const stdout = std.io.getStdOut();
+        try status.write(stdout.writer(), &ctx, allocator);
     } else if (std.mem.eql(u8, command, "help")) {
         std.debug.print("{s}", .{usage});
     } else {
         std.debug.print("Unknown command: {s}\n{s}", .{ command, usage });
-        std.process.exit(status.usage);
+        std.process.exit(exit.usage);
     }
 
-    std.process.exit(status.success);
+    std.process.exit(exit.success);
 }
 
