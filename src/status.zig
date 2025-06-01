@@ -6,7 +6,7 @@ const renderer = @import("renderer.zig");
 pub fn write(writer: anytype, ctx: *context.Context, allocator: std.mem.Allocator) !void {
     var counter = CountingWriter().init();
     try renderer.write(counter.writer(), ctx, allocator);
-    try std.fmt.format(writer, "Tokens (estimated): {}\n", .{counter.tokens()});
+    try std.fmt.format(writer, "Estimated tokens: {}\n", .{counter.tokens()});
 }
 
 fn CountingWriter() type {
