@@ -32,7 +32,7 @@ Exit codes: `0` success, `1` failure, `2` usage error.
 
 ## Tab completion
 
-To enable tab completion, either source [`ctx-completion.bash`](./ctx-completion.bash) or move it to `/etc/bash_completion.d`.
+To enable tab completion, either source [`ctx-prompt.bash`](./ctx-prompt.bash) or move it to `/etc/bash_completion.d`.
 
 ## License
 
