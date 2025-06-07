@@ -24,6 +24,17 @@ __ctx_complete_git_refs() {
 	fi
 }
 
+# complete paths from ctx status
+__ctx_complete_paths() {
+	COMPREPLY=()
+	local paths=
+	# Extract paths from ctx status output (lines starting with tab after "Paths:")
+	paths=$(ctx status 2>/dev/null | sed -n '/^Paths:/,/^[^[:space:]]/ { /^[[:space:]]/ p }' | sed 's/^[[:space:]]*//')
+	if [[ -n "$paths" ]]; then
+		mapfile -t COMPREPLY < <(compgen -W "$paths" -- "$cur")
+	fi
+}
+
 # -------------------------------- dispatcher ---------------------------------
 
 _ctx() {
@@ -39,6 +50,7 @@ _ctx() {
 	# argument completion by verb
 	case "${COMP_WORDS[1]}" in
 	merge-base) __ctx_complete_git_refs ;; # git refs
+	rm) __ctx_complete_paths ;;            # paths from ctx status
 	*) COMPREPLY=() ;;                     # nothing more
 	esac
 }

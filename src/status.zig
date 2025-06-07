@@ -7,6 +7,10 @@ pub fn write(writer: anytype, ctx: *Context, allocator: std.mem.Allocator) !void
     var counter = TokenCounter().init();
     try renderer.write(counter.writer(), ctx, allocator);
     try std.fmt.format(writer, "Estimated token count: {}\n", .{counter.tokens()});
+    try std.fmt.format(writer, "Merge base: {s}\n", .{ctx.merge_base});
+    _ = try writer.write("Paths:\n");
+    var it = ctx.paths.keyIterator();
+    while (it.next()) |path| try std.fmt.format(writer, "\t{s}\n", .{path.*});
 }
 
 fn TokenCounter() type {
