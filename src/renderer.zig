@@ -2,7 +2,6 @@ const std = @import("std");
 
 const Context = @import("Context.zig");
 const diff = @import("diff.zig");
-const tree = @import("tree.zig");
 
 /// Write the context to the given writer.
 pub fn write(writer: anytype, ctx: *Context, allocator: std.mem.Allocator) !void {
@@ -12,11 +11,6 @@ pub fn write(writer: anytype, ctx: *Context, allocator: std.mem.Allocator) !void
         try diff.write(writer, ctx.merge_base, allocator);
         try writer.writeAll("```\n\n");
     }
-
-    // Write directory overview
-    try writer.writeAll("# Directory view\n\n```\n");
-    try tree.write(writer, allocator);
-    try writer.writeAll("```\n\n");
 
     // Write files
     try writer.writeAll("# Files\n\n");

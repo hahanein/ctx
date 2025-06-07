@@ -2,7 +2,6 @@ const Context = @This();
 
 const std = @import("std");
 
-const tree = @import("tree.zig");
 const diff = @import("diff.zig");
 
 paths: std.StringHashMap(void),
