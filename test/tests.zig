@@ -1,4 +1,6 @@
 const std = @import("std");
+const alloc = std.testing.allocator;
+const Child = std.process.Child;
 
 const exe_path = "zig-out/bin/ctx";
 
@@ -10,13 +12,7 @@ fn setup() void {
 test "usage message with correct exit code" {
     setup();
 
-    const alloc = std.testing.allocator;
-
-    const result = try std.process.Child.run(.{
-        .allocator = alloc,
-        .argv = &.{exe_path},
-    });
-
+    const result = try Child.run(.{ .allocator = alloc, .argv = &.{exe_path} });
     defer alloc.free(result.stdout);
     defer alloc.free(result.stderr);
 
