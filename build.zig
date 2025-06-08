@@ -28,21 +28,19 @@ pub fn build(b: *std.Build) void {
     const run_step = b.step("run", "Run the app");
     run_step.dependOn(&run_cmd.step);
 
-    const exe_unit_tests = b.addTest(.{
-        .root_module = exe_mod,
+    // Integration tests..
+
+    const tests = b.addTest(.{
+        .root_source_file = b.path("test/tests.zig"),
+        .target = target,
+        .optimize = optimize,
     });
 
-    const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
+    const tests_cmd = b.addRunArtifact(tests);
+    tests_cmd.step.dependOn(b.getInstallStep());
 
-    const test_step = b.step("test", "Run unit tests");
-    test_step.dependOn(&run_exe_unit_tests.step);
-
-    const exe_check = b.addExecutable(.{
-        .name = "ctx",
-        .root_module = exe_mod,
-    });
-
-    const check = b.step("check", "Check if ctx compiles");
-    check.dependOn(&exe_check.step);
+    const tests_step = b.step("test", "Run integration tests");
+    tests_step.dependOn(&tests_cmd.step);
+    tests_step.dependOn(&exe.step);
 }
 
