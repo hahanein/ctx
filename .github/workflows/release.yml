@@ -3,7 +3,7 @@ name: release
 on:
   push:
     tags:
-      - "v*"
+      - "v[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
   build-release:
@@ -14,22 +14,24 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: mlugg/setup-zig@v2
-      - name: Build binaries
+      - name: Build binary
         run: zig build -Doptimize=ReleaseFast
-      - name: Package binaries
-        run: |
-          mkdir -p dist
-          cp zig-out/bin/* dist/
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: binaries
-          path: dist/*
+          path: |
+            zig-out/bin/ctx
+            ctx-prompt.bash
+            LICENSE
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref }}
-          name: "ctx ${{ github.ref_name }}"
-          files: dist/*
+          name: ${{ github.ref_name }}
+          with:
+            files: |
+              zig-out/bin/ctx
+              ctx-prompt.bash
+              LICENSE
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
