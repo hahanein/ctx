@@ -5,8 +5,8 @@ const Child = std.process.Child;
 const exe_path = "zig-out/bin/ctx";
 
 fn setup() void {
-    const dir = std.testing.tmpDir(.{});
-    std.fs.Dir.setAsCwd(dir);
+    const tmpDir = std.testing.tmpDir(.{});
+    std.fs.Dir.setAsCwd(tmpDir.dir);
 }
 
 test "usage message with correct exit code" {
