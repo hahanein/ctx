@@ -2,7 +2,14 @@ const std = @import("std");
 
 const exe_path = "zig-out/bin/ctx";
 
+fn setup() void {
+    const dir = std.testing.tmpDir(.{});
+    std.fs.Dir.setAsCwd(dir);
+}
+
 test "usage message with correct exit code" {
+    setup();
+
     const alloc = std.testing.allocator;
 
     const result = try std.process.Child.run(.{
