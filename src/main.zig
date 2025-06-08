@@ -5,7 +5,6 @@ const storage = @import("storage.zig");
 const renderer = @import("renderer.zig");
 const status = @import("status.zig");
 
-/// Usage message
 const usage =
     \\ctx - A command line tool for building prompt context files for
     \\large-language models.
@@ -23,7 +22,6 @@ const usage =
     \\
 ;
 
-/// Exit status codes
 const exit = struct {
     pub const success = 0;
     pub const failure = 1;
