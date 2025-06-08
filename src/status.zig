@@ -23,8 +23,7 @@ fn TokenCounter() type {
 
         pub fn tokens(self: *@This()) usize {
             // One token generally corresponds to about 4 characters of text
-            // for common English text.
-            // We add 3 to round up.
+            // for common English text. We add 3 to round up.
             return (self.count + 3) / 4;
         }
 
