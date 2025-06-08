@@ -10,7 +10,7 @@ fn setup() !void {
 }
 
 test "usage message with correct exit code" {
-    setup();
+    try setup();
 
     const result = try Child.run(.{ .allocator = alloc, .argv = &.{exe_path} });
     defer alloc.free(result.stdout);
