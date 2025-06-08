@@ -4,15 +4,12 @@ const Child = std.process.Child;
 
 const exe_path = "zig-out/bin/ctx";
 
-fn setup() !void {
-    const tmpDir = std.testing.tmpDir(.{});
-    try std.fs.Dir.setAsCwd(tmpDir.dir);
-}
-
 test "usage message with correct exit code" {
-    try setup();
+    const tmp_dir = std.testing.tmpDir(.{});
+    const exe_abs_path = try std.fs.realpathAlloc(alloc, exe_path);
+    defer alloc.free(exe_abs_path);
 
-    const result = try Child.run(.{ .allocator = alloc, .argv = &.{exe_path} });
+    const result = try Child.run(.{ .argv = &.{exe_abs_path}, .cwd_dir = tmp_dir.dir, .allocator = alloc });
     defer alloc.free(result.stdout);
     defer alloc.free(result.stderr);
 
