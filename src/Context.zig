@@ -1,8 +1,8 @@
-const Context = @This();
-
 const std = @import("std");
 
 const diff = @import("diff.zig");
+
+const Context = @This();
 
 paths: std.StringHashMap(void),
 merge_base: []const u8 = "",
