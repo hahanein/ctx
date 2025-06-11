@@ -24,7 +24,11 @@ pub fn write(writer: anytype, ctx: *Context, allocator: std.mem.Allocator) !void
 
     var it = clone.keyIterator();
     while (it.next()) |path| {
-        var file = try std.fs.cwd().openFile(path.*, .{});
+        var file = std.fs.cwd().openFile(path.*, .{}) catch {
+            try std.fmt.format(writer, "**Deleted:** `{s}`\n\n", .{path.*});
+            continue;
+        };
+
         defer file.close();
 
         const extension = std.fs.path.extension(path.*);
