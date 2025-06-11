@@ -15,10 +15,10 @@ pub fn parse(file_path: []const u8, allocator: std.mem.Allocator) !Ignore {
 
     defer file.close();
 
-    var patterns = std.ArrayList([:0]const u8).init(allocator);
     var buffered_reader = std.io.bufferedReader(file.reader());
     var reader = buffered_reader.reader();
 
+    var patterns = std.ArrayList([:0]const u8).init(allocator);
     while (try reader.readUntilDelimiterOrEofAlloc(allocator, '\n', 1024)) |line| {
         defer allocator.free(line);
         const trimmed = std.mem.trim(u8, line, " \t\r\n");
