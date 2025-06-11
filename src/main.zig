@@ -1,9 +1,10 @@
 const std = @import("std");
 
 const Context = @import("Context.zig");
-const storage = @import("storage.zig");
+const Ignore = @import("Ignore.zig");
 const renderer = @import("renderer.zig");
 const status = @import("status.zig");
+const storage = @import("storage.zig");
 
 const usage =
     \\ctx - A command line tool for building prompt context files for
@@ -48,10 +49,11 @@ pub fn main() !void {
     if (std.mem.eql(u8, cmd, "init")) {
         try storage.write(&Context.init(allocator));
     } else if (std.mem.eql(u8, cmd, "show")) {
+        var ignore = try Ignore.parse(".ctxignore", allocator);
         var ctx = Context.init(allocator);
         try storage.read(&ctx, allocator);
         const stdout = std.io.getStdOut();
-        try renderer.write(stdout.writer(), &ctx, allocator);
+        try renderer.write(stdout.writer(), &ctx, &ignore, allocator);
     } else if (std.mem.eql(u8, cmd, "add")) {
         var ctx = Context.init(allocator);
         try storage.read(&ctx, allocator);
@@ -68,10 +70,11 @@ pub fn main() !void {
         ctx.merge_base = if (args.len > 2) args[2] else "";
         try storage.write(&ctx);
     } else if (std.mem.eql(u8, cmd, "status")) {
+        var ignore = try Ignore.parse(".ctxignore", allocator);
         var ctx = Context.init(allocator);
         try storage.read(&ctx, allocator);
         const stdout = std.io.getStdOut();
-        try status.write(stdout.writer(), &ctx, allocator);
+        try status.write(stdout.writer(), &ctx, &ignore, allocator);
     } else if (std.mem.eql(u8, cmd, "help")) {
         std.debug.print("{s}", .{usage});
     } else {

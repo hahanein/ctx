@@ -2,13 +2,14 @@ const std = @import("std");
 
 const Context = @import("Context.zig");
 const diff = @import("diff.zig");
+const Ignore = @import("Ignore.zig");
 
 /// Write the context to the given writer.
-pub fn write(writer: anytype, ctx: *Context, allocator: std.mem.Allocator) !void {
+pub fn write(writer: anytype, ctx: *Context, ignore: *const Ignore, allocator: std.mem.Allocator) !void {
     // Write diff
     if (ctx.merge_base.len > 0) {
         try writer.writeAll("# Diff\n\n```diff\n");
-        try diff.write(writer, ctx.merge_base, allocator);
+        try diff.write(writer, ctx.merge_base, ignore, allocator);
         try writer.writeAll("```\n\n");
     }
 
@@ -24,6 +25,8 @@ pub fn write(writer: anytype, ctx: *Context, allocator: std.mem.Allocator) !void
 
     var it = clone.keyIterator();
     while (it.next()) |path| {
+        if (try ignore.isIgnored(path.*)) continue;
+
         var file = std.fs.cwd().openFile(path.*, .{}) catch {
             try std.fmt.format(writer, "**Deleted:** `{s}`\n\n", .{path.*});
             continue;

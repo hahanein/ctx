@@ -17,6 +17,17 @@ ctx merge-base main           # Register merge base to base diff on
 ctx show | wl-copy            # Copy Markdown context to clipboard
 ```
 
+## Ignore patterns
+
+Create a `.ctxignore` file to exclude files from context generation using glob patterns:
+
+```
+# Comments start with #
+*.tmp
+build/
+test/*
+```
+
 ## Commands
 
 | Command                 | Description         |

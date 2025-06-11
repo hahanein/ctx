@@ -1,8 +1,22 @@
 const std = @import("std");
 
+const Ignore = @import("Ignore.zig");
+
 /// Write the diff to the given writer.
-pub fn write(writer: anytype, merge_base: []const u8, allocator: std.mem.Allocator) !void {
-    var child = std.process.Child.init(&.{ "git", "diff", "--relative", "--minimal", "--cached", "--merge-base", merge_base }, allocator);
+pub fn write(writer: anytype, merge_base: []const u8, ignore: *const Ignore, allocator: std.mem.Allocator) !void {
+    var args = std.ArrayList([]const u8).init(allocator);
+    _ = try args.appendSlice(&.{ "git", "diff", "--relative", "--minimal", "--cached", "--merge-base", merge_base, "--" });
+
+    {
+        // Add all non-ignored paths to the arguments.
+        var it = try PathIterator().init(merge_base, allocator);
+        while (try it.next()) |path| {
+            if (try ignore.isIgnored(path)) continue;
+            _ = try args.append(path);
+        }
+    }
+
+    var child = std.process.Child.init(try args.toOwnedSlice(), allocator);
     child.stdout_behavior = .Pipe;
     child.stderr_behavior = .Ignore;
 
