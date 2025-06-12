@@ -1,4 +1,5 @@
 const std = @import("std");
+const build_options = @import("build_options");
 
 const Context = @import("Context.zig");
 const Ignore = @import("Ignore.zig");
@@ -77,7 +78,6 @@ pub fn main() !void {
         const stdout = std.io.getStdOut();
         try status.write(stdout.writer(), &ctx, &ignore, allocator);
     } else if (std.mem.eql(u8, cmd, "version")) {
-        const build_options = @import("build_options");
         std.debug.print("ctx version v{s}\n", .{build_options.version});
     } else if (std.mem.eql(u8, cmd, "help")) {
         std.debug.print("{s}", .{usage});
