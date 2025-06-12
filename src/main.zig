@@ -19,6 +19,7 @@ const usage =
     \\  rm [<pathspec>...]     Remove files
     \\  merge-base [<commit>]  Set merge base
     \\  status                 Show context status
+    \\  version                Show version information
     \\  help                   Show this help message
     \\
 ;
@@ -75,6 +76,9 @@ pub fn main() !void {
         try storage.read(&ctx, allocator);
         const stdout = std.io.getStdOut();
         try status.write(stdout.writer(), &ctx, &ignore, allocator);
+    } else if (std.mem.eql(u8, cmd, "version")) {
+        const build_options = @import("build_options");
+        std.debug.print("ctx version v{s}\n", .{build_options.version});
     } else if (std.mem.eql(u8, cmd, "help")) {
         std.debug.print("{s}", .{usage});
     } else {

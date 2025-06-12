@@ -30,15 +30,16 @@ test/*
 
 ## Commands
 
-| Command                 | Description         |
-| ----------------------- | ------------------- |
-| `init`                  | Create new context  |
-| `add [<pathspec>...]`   | Add files           |
-| `rm [<pathspec>...]`    | Remove files        |
-| `merge-base [<commit>]` | Set merge base      |
-| `show`                  | Show context        |
-| `status`                | Show context status |
-| `help`                  | Show help message   |
+| Command                 | Description              |
+| ----------------------- | ------------------------ |
+| `init`                  | Create new context       |
+| `add [<pathspec>...]`   | Add files                |
+| `rm [<pathspec>...]`    | Remove files             |
+| `merge-base [<commit>]` | Set merge base           |
+| `show`                  | Show context             |
+| `status`                | Show context status      |
+| `version`               | Show version information |
+| `help`                  | Show help message        |
 
 Exit codes: `0` success, `1` failure, `2` usage error.
 
