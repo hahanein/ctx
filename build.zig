@@ -16,6 +16,10 @@ pub fn build(b: *std.Build) void {
         .abi = .musl,
     });
 
+    // Make version available in our modules..
+    const options = b.addOptions();
+    options.addOption([]const u8, "version", manifest.version);
+
     const exe = b.addExecutable(.{
         .name = "ctx",
         .root_module = b.createModule(.{
@@ -25,16 +29,8 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
-    {
-        // Make version available in our modules..
-        const options = b.addOptions();
-        options.addOption([]const u8, "version", manifest.version);
-        exe.root_module.addOptions("build_options", options);
-    }
-
-    // Make fnmatch.c available in our modules..
+    exe.root_module.addOptions("build_options", options);
     exe.linkLibC();
-
     b.installArtifact(exe);
 
     {
@@ -54,6 +50,8 @@ pub fn build(b: *std.Build) void {
             .target = target,
             .optimize = optimize,
         });
+
+        tests.root_module.addOptions("build_options", options);
 
         const tests_cmd = b.addRunArtifact(tests);
         tests_cmd.step.dependOn(b.getInstallStep());
