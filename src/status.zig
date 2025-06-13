@@ -46,12 +46,12 @@ fn TokenCounter() type {
             return (self.count + 3) / 4;
         }
 
-        pub fn writeImpl(self: *@This(), data: []const u8) error{}!usize {
+        fn writeImpl(self: *@This(), data: []const u8) anyerror!usize {
             self.count += data.len;
             return data.len;
         }
 
-        pub fn writer(self: *@This()) std.io.Writer(*@This(), error{}, writeImpl) {
+        pub fn writer(self: *@This()) std.io.Writer(*@This(), anyerror, writeImpl) {
             return .{ .context = self };
         }
     };
