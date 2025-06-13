@@ -7,9 +7,9 @@ const Ignore = @import("Ignore.zig");
 /// Write the context to the given writer.
 pub fn write(writer: anytype, ctx: *Context, ignore: *const Ignore, allocator: std.mem.Allocator) !void {
     // Write diff
-    if (ctx.merge_base.len > 0) {
+    if (ctx.merge_base.items.len > 0) {
         try writer.writeAll("# Diff\n\n```diff\n");
-        try diff.write(writer, ctx.merge_base, ignore, allocator);
+        try diff.write(writer, ctx.merge_base.items, ignore, allocator);
         try writer.writeAll("```\n\n");
     }
 
@@ -18,8 +18,8 @@ pub fn write(writer: anytype, ctx: *Context, ignore: *const Ignore, allocator: s
 
     var clone = try ctx.paths.clone();
     defer clone.deinit();
-    if (ctx.merge_base.len > 0) {
-        var it = try diff.PathIterator().init(ctx.merge_base, allocator);
+    if (ctx.merge_base.items.len > 0) {
+        var it = try diff.PathIterator().init(ctx.merge_base.items, allocator);
         while (try it.next()) |path| _ = try clone.put(path, {});
     }
 

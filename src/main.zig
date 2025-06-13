@@ -5,7 +5,6 @@ const Context = @import("Context.zig");
 const Ignore = @import("Ignore.zig");
 const renderer = @import("renderer.zig");
 const status = @import("status.zig");
-const storage = @import("storage.zig");
 
 const usage =
     \\ctx - A command line tool for building prompt context files for
@@ -49,32 +48,28 @@ pub fn main() !void {
     const cmd = args[1];
     const cmd_args = args[2..];
     if (std.mem.eql(u8, cmd, "init")) {
-        try storage.write(&Context.init(allocator));
+        try Context.init(allocator).writeFile(".ctx");
     } else if (std.mem.eql(u8, cmd, "show")) {
-        var ignore = try Ignore.parse(".ctxignore", allocator);
-        var ctx = Context.init(allocator);
-        try storage.read(&ctx, allocator);
+        var ignore = try Ignore.parseFromFile(".ctxignore", allocator);
+        var ctx = try Context.parseFromFile(".ctx", allocator);
         const stdout = std.io.getStdOut();
         try renderer.write(stdout.writer(), &ctx, &ignore, allocator);
     } else if (std.mem.eql(u8, cmd, "add")) {
-        var ctx = Context.init(allocator);
-        try storage.read(&ctx, allocator);
+        var ctx = try Context.parseFromFile(".ctx", allocator);
         try ctx.add(cmd_args);
-        try storage.write(&ctx);
+        try ctx.writeFile(".ctx");
     } else if (std.mem.eql(u8, cmd, "rm")) {
-        var ctx = Context.init(allocator);
-        try storage.read(&ctx, allocator);
+        var ctx = try Context.parseFromFile(".ctx", allocator);
         ctx.rm(cmd_args);
-        try storage.write(&ctx);
+        try ctx.writeFile(".ctx");
     } else if (std.mem.eql(u8, cmd, "merge-base")) {
-        var ctx = Context.init(allocator);
-        try storage.read(&ctx, allocator);
-        ctx.merge_base = if (args.len > 2) args[2] else "";
-        try storage.write(&ctx);
+        var ctx = try Context.parseFromFile(".ctx", allocator);
+        ctx.merge_base.clearRetainingCapacity();
+        if (args.len > 2) try ctx.merge_base.appendSlice(args[2]);
+        try ctx.writeFile(".ctx");
     } else if (std.mem.eql(u8, cmd, "status")) {
-        var ignore = try Ignore.parse(".ctxignore", allocator);
-        var ctx = Context.init(allocator);
-        try storage.read(&ctx, allocator);
+        var ignore = try Ignore.parseFromFile(".ctxignore", allocator);
+        var ctx = try Context.parseFromFile(".ctx", allocator);
         const stdout = std.io.getStdOut();
         try status.write(stdout.writer(), &ctx, &ignore, allocator);
     } else if (std.mem.eql(u8, cmd, "version")) {

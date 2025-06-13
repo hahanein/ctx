@@ -13,9 +13,9 @@ pub fn write(writer: anytype, ctx: *Context, ignore: *const Ignore, allocator: s
     }
 
     {
-        try std.fmt.format(writer, "Merge base: {s}\n", .{ctx.merge_base});
+        try std.fmt.format(writer, "Merge base: {s}\n", .{ctx.merge_base.items});
         _ = try writer.write("Modified:\n");
-        var it = try diff.PathIterator().init(ctx.merge_base, allocator);
+        var it = try diff.PathIterator().init(ctx.merge_base.items, allocator);
         while (try it.next()) |path| {
             if (try ignore.isIgnored(path)) continue;
             try std.fmt.format(writer, "\t{s}\n", .{path});
