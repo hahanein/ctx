@@ -16,35 +16,47 @@ pub fn write(writer: anytype, ctx: *Context, ignore: *const Ignore, allocator: s
     // Write files
     try writer.writeAll("# Files\n\n");
 
-    var clone = try ctx.paths.clone();
-    defer clone.deinit();
-    if (ctx.merge_base.items.len > 0) {
+    {
+        // Write files computed from diff..
         var it = try diff.PathIterator().init(ctx.merge_base.items, allocator);
-        while (try it.next()) |path| _ = try clone.put(path, {});
+        while (try it.next()) |path| {
+            // Skip files that are specified in the context paths as we will
+            // print them below.
+            if (ctx.paths.contains(path)) continue;
+            if (try ignore.isIgnored(path)) continue;
+            try writeFile(writer, path);
+        }
     }
 
-    var it = clone.keyIterator();
-    while (it.next()) |path| {
-        if (try ignore.isIgnored(path.*)) continue;
-
-        var file = std.fs.cwd().openFile(path.*, .{}) catch {
-            try std.fmt.format(writer, "**Deleted:** `{s}`\n\n", .{path.*});
-            continue;
-        };
-
-        defer file.close();
-
-        const extension = std.fs.path.extension(path.*);
-        const tag = if (extension.len == 0) "text" else extension[1..];
-
-        try std.fmt.format(writer, "```{s} path={s}\n", .{ tag, path.* });
-
-        const reader = file.reader();
-
-        var fifo = std.fifo.LinearFifo(u8, .{ .Static = 4096 }).init();
-        try fifo.pump(reader, writer);
-
-        try writer.writeAll("```\n\n");
+    {
+        // Write files added by user..
+        var it = ctx.paths.keyIterator();
+        while (it.next()) |path| {
+            if (try ignore.isIgnored(path.*)) continue;
+            try writeFile(writer, path.*);
+        }
     }
+}
+
+/// Write the file at the given path to the given writer.
+fn writeFile(writer: anytype, path: []const u8) !void {
+    var file = std.fs.cwd().openFile(path, .{}) catch {
+        try std.fmt.format(writer, "**Deleted:** `{s}`\n\n", .{path});
+        return;
+    };
+
+    defer file.close();
+
+    const extension = std.fs.path.extension(path);
+    const tag = if (extension.len == 0) "text" else extension[1..];
+
+    try std.fmt.format(writer, "```{s} path={s}\n", .{ tag, path });
+
+    const reader = file.reader();
+
+    var fifo = std.fifo.LinearFifo(u8, .{ .Static = 4096 }).init();
+    try fifo.pump(reader, writer);
+
+    try writer.writeAll("```\n\n");
 }
 

@@ -50,26 +50,26 @@ pub fn main() !void {
     if (std.mem.eql(u8, cmd, "init")) {
         try Context.init(allocator).writeFile(".ctx");
     } else if (std.mem.eql(u8, cmd, "show")) {
-        var ignore = try Ignore.parseFromFile(".ctxignore", allocator);
-        var ctx = try Context.parseFromFile(".ctx", allocator);
+        var ignore = try Ignore.parseFile(".ctxignore", allocator);
+        var ctx = try Context.parseFile(".ctx", allocator);
         const stdout = std.io.getStdOut();
         try renderer.write(stdout.writer(), &ctx, &ignore, allocator);
     } else if (std.mem.eql(u8, cmd, "add")) {
-        var ctx = try Context.parseFromFile(".ctx", allocator);
+        var ctx = try Context.parseFile(".ctx", allocator);
         try ctx.add(cmd_args);
         try ctx.writeFile(".ctx");
     } else if (std.mem.eql(u8, cmd, "rm")) {
-        var ctx = try Context.parseFromFile(".ctx", allocator);
+        var ctx = try Context.parseFile(".ctx", allocator);
         ctx.rm(cmd_args);
         try ctx.writeFile(".ctx");
     } else if (std.mem.eql(u8, cmd, "merge-base")) {
-        var ctx = try Context.parseFromFile(".ctx", allocator);
+        var ctx = try Context.parseFile(".ctx", allocator);
         ctx.merge_base.clearRetainingCapacity();
         if (args.len > 2) try ctx.merge_base.appendSlice(args[2]);
         try ctx.writeFile(".ctx");
     } else if (std.mem.eql(u8, cmd, "status")) {
-        var ignore = try Ignore.parseFromFile(".ctxignore", allocator);
-        var ctx = try Context.parseFromFile(".ctx", allocator);
+        var ignore = try Ignore.parseFile(".ctxignore", allocator);
+        var ctx = try Context.parseFile(".ctx", allocator);
         const stdout = std.io.getStdOut();
         try status.write(stdout.writer(), &ctx, &ignore, allocator);
     } else if (std.mem.eql(u8, cmd, "version")) {
