@@ -25,6 +25,7 @@ pub fn write(writer: anytype, ctx: *Context, ignore: *const Ignore, allocator: s
             if (ctx.paths.contains(path)) continue;
             if (try ignore.isIgnored(path)) continue;
             try writeFile(writer, path);
+            try writer.writeAll("\n\n");
         }
     }
 
@@ -34,6 +35,7 @@ pub fn write(writer: anytype, ctx: *Context, ignore: *const Ignore, allocator: s
         while (it.next()) |path| {
             if (try ignore.isIgnored(path.*)) continue;
             try writeFile(writer, path.*);
+            try writer.writeAll("\n\n");
         }
     }
 }
@@ -41,7 +43,7 @@ pub fn write(writer: anytype, ctx: *Context, ignore: *const Ignore, allocator: s
 /// Write the file at the given path to the given writer.
 fn writeFile(writer: anytype, path: []const u8) !void {
     var file = std.fs.cwd().openFile(path, .{}) catch {
-        try std.fmt.format(writer, "**Deleted:** `{s}`\n\n", .{path});
+        try std.fmt.format(writer, "**Deleted:** `{s}`", .{path});
         return;
     };
 
@@ -56,7 +58,6 @@ fn writeFile(writer: anytype, path: []const u8) !void {
 
     var fifo = std.fifo.LinearFifo(u8, .{ .Static = 4096 }).init();
     try fifo.pump(reader, writer);
-
-    try writer.writeAll("```\n\n");
+    try writer.writeAll("```");
 }
 
