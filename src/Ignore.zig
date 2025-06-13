@@ -32,6 +32,7 @@ pub fn parseFile(file_path: []const u8, allocator: std.mem.Allocator) !Ignore {
 /// True if `path` matches any stored pattern (first match wins).
 pub fn isIgnored(self: *const Ignore, path: []const u8) !bool {
     const copy = try self.allocator.dupeZ(u8, path);
+    defer self.allocator.free(copy);
     for (self.patterns) |pattern| if (c.fnmatch(pattern, copy, c.FNM_PATHNAME) == 0) return true;
     return false;
 }
