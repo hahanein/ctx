@@ -73,24 +73,24 @@ pub fn parseFile(file_path: []const u8, allocator: std.mem.Allocator) !Context {
 pub fn writeFile(self: *const Context, file_path: []const u8) !void {
     const file = try std.fs.cwd().createFile(file_path, .{ .truncate = true });
     defer file.close();
-    const w = file.writer();
+    const writer = file.writer();
 
     // header
-    try w.writeInt(u32, magic, std.builtin.Endian.little); // magic
-    try w.writeByte(version); // version
+    try writer.writeInt(u32, magic, std.builtin.Endian.little); // magic
+    try writer.writeByte(version); // version
 
     // merge base
     const merge_base_len32 = std.math.cast(u32, self.merge_base.items.len) orelse return error.StringTooLong;
-    try w.writeInt(u32, merge_base_len32, std.builtin.Endian.little);
-    try w.writeAll(self.merge_base.items);
+    try writer.writeInt(u32, merge_base_len32, std.builtin.Endian.little);
+    try writer.writeAll(self.merge_base.items);
 
     // paths
-    try w.writeInt(u64, @intCast(self.paths.count()), std.builtin.Endian.little);
+    try writer.writeInt(u64, @intCast(self.paths.count()), std.builtin.Endian.little);
     var it = self.paths.keyIterator();
     while (it.next()) |path| {
         const len32 = std.math.cast(u32, path.*.len) orelse return error.StringTooLong;
-        try w.writeInt(u32, len32, std.builtin.Endian.little);
-        try w.writeAll(path.*);
+        try writer.writeInt(u32, len32, std.builtin.Endian.little);
+        try writer.writeAll(path.*);
     }
 }
 
