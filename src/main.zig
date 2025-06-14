@@ -52,13 +52,8 @@ const Command = enum {
     }
 };
 
-const StatusCodes = struct {
-    pub const success = 0;
-    pub const failure = 1;
-    pub const usage = 2;
-};
-
-fn exec(command: Command, arguments: []const []const u8, allocator: std.mem.Allocator) !void {
+/// Execute command with arguments.
+fn execute(command: Command, arguments: []const []const u8, allocator: std.mem.Allocator) !void {
     const stdout = std.io.getStdOut();
     defer stdout.close();
     const writer = stdout.writer();
@@ -118,6 +113,12 @@ fn exec(command: Command, arguments: []const []const u8, allocator: std.mem.Allo
     }
 }
 
+const StatusCodes = struct {
+    pub const success = 0;
+    pub const failure = 1;
+    pub const usage = 2;
+};
+
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
@@ -140,7 +141,7 @@ pub fn main() !void {
         std.process.exit(StatusCodes.usage);
     };
 
-    exec(command, command_arguments, allocator) catch |err| switch (err) {
+    execute(command, command_arguments, allocator) catch |err| switch (err) {
         error.WorkspaceFileNotFound => {
             std.debug.print("Fatal: not a ctx workspace\n", .{});
             std.process.exit(StatusCodes.failure);
