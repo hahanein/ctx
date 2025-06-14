@@ -73,6 +73,9 @@ test "print modified" {
     var environment = try Environment.init(allocator);
     defer environment.deinit();
 
+    try environment.run(&[_][]const u8{ "git", "config", "--global", "user.email", "you@example.com" });
+    try environment.run(&[_][]const u8{ "git", "config", "--global", "user.name", "Your Name" });
+
     try environment.writeFile("birds", "sparrow robin");
     try environment.writeFile("flowers", "rose tulip");
     try environment.run(&[_][]const u8{ "git", "init" });
