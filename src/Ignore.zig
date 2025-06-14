@@ -9,6 +9,11 @@ const c = @cImport({
 allocator: std.mem.Allocator,
 patterns: [][:0]const u8,
 
+/// Free all allocated memory.
+pub fn deinit(self: *Ignore) void {
+    for (self.patterns) |pattern| self.allocator.free(pattern);
+}
+
 /// Load patterns from a given file.
 pub fn parseFile(file_path: []const u8, allocator: std.mem.Allocator) !Ignore {
     var file = try std.fs.cwd().openFile(file_path, .{});
