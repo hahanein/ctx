@@ -5,6 +5,7 @@ const renderer = @import("renderer.zig");
 const diff = @import("diff.zig");
 const Ignore = @import("Ignore.zig");
 
+/// Writes a summary of the context to the writer.
 pub fn write(writer: anytype, ctx: *Context, ignore: *const Ignore, allocator: std.mem.Allocator) !void {
     {
         var counter = TokenCounter().init();
@@ -17,8 +18,8 @@ pub fn write(writer: anytype, ctx: *Context, ignore: *const Ignore, allocator: s
         _ = try writer.write("Modified:\n");
         var it = try diff.PathIterator().init(ctx.merge_base.items, allocator);
         while (try it.next()) |path| {
-            if (try ignore.isIgnored(path)) continue;
-            try std.fmt.format(writer, "\t{s}\n", .{path});
+            if (try ignore.isIgnored(path.*)) continue;
+            try std.fmt.format(writer, "\t{s}\n", .{path.*});
         }
     }
 
@@ -32,6 +33,7 @@ pub fn write(writer: anytype, ctx: *Context, ignore: *const Ignore, allocator: s
     }
 }
 
+/// Estimates the number of tokens in the text written to it.
 fn TokenCounter() type {
     return struct {
         count: usize = 0,

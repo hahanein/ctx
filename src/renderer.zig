@@ -22,9 +22,9 @@ pub fn write(writer: anytype, ctx: *Context, ignore: *const Ignore, allocator: s
         while (try it.next()) |path| {
             // Skip files that are specified in the context paths as we will
             // print them below.
-            if (ctx.paths.contains(path)) continue;
-            if (try ignore.isIgnored(path)) continue;
-            try writeFile(writer, path);
+            if (ctx.paths.contains(path.*)) continue;
+            if (try ignore.isIgnored(path.*)) continue;
+            try writeFile(writer, path.*);
             try writer.writeAll("\n\n");
         }
     }

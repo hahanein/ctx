@@ -11,8 +11,8 @@ pub fn write(writer: anytype, merge_base: []const u8, ignore: *const Ignore, all
         // Add all non-ignored paths to the arguments.
         var it = try PathIterator().init(merge_base, allocator);
         while (try it.next()) |path| {
-            if (try ignore.isIgnored(path)) continue;
-            _ = try args.append(path);
+            if (try ignore.isIgnored(path.*)) continue;
+            _ = try args.append(path.*);
         }
     }
 
@@ -63,7 +63,7 @@ pub fn PathIterator() type {
         }
 
         /// Return the next path (owned slice) or `null` at EOF.
-        pub fn next(self: *@This()) !?[]const u8 {
+        pub fn next(self: *@This()) !?*[]u8 {
             if (self.done) return null;
 
             // The Reader is created on demand from the live buffered_reader.
@@ -81,8 +81,7 @@ pub fn PathIterator() type {
                 self.line.items.len -= 1;
             }
 
-            // Turn the ArrayList into an owned slice and hand it off.
-            return try self.line.toOwnedSlice();
+            return &self.line.items;
         }
     };
 }
