@@ -33,10 +33,17 @@ const Command = enum {
     status,
     version,
     help,
+    /// Replace dash with underscore in enum field names to get command names.
+    fn format(comptime src: []const u8) [src.len]u8 {
+        var buf: [src.len]u8 = undefined;
+        for (src, 0..) |char, i| buf[i] = if (char == '_') '-' else char;
+        return buf;
+    }
+    /// Parse command name from bytes.
     pub fn parse(bytes: []u8) !Command {
-        _ = std.mem.replace(u8, bytes, "-", "_", bytes);
         inline for (std.meta.fields(Command)) |command| {
-            if (std.mem.eql(u8, command.name, bytes)) {
+            const command_name = comptime format(command.name);
+            if (std.mem.eql(u8, &command_name, bytes)) {
                 return @enumFromInt(command.value);
             }
         }
@@ -75,33 +82,50 @@ pub fn main() !void {
 
     switch (command) {
         .init => {
-            try Context.init(allocator).writeFile(".ctx");
+            var ctx = Context.init(allocator);
+            defer ctx.deinit();
+
+            try ctx.writeFile(".ctx");
         },
         .show => {
             var ignore = try Ignore.parseFile(".ctxignore", allocator);
+            defer ignore.deinit();
+
             var ctx = try Context.parseFile(".ctx", allocator);
+            defer ctx.deinit();
+
             const stdout = std.io.getStdOut();
             try renderer.write(stdout.writer(), &ctx, &ignore, allocator);
         },
         .add => {
             var ctx = try Context.parseFile(".ctx", allocator);
+            defer ctx.deinit();
+
             try ctx.add(arguments);
             try ctx.writeFile(".ctx");
         },
         .rm => {
             var ctx = try Context.parseFile(".ctx", allocator);
+            defer ctx.deinit();
+
             ctx.rm(arguments);
             try ctx.writeFile(".ctx");
         },
         .merge_base => {
             var ctx = try Context.parseFile(".ctx", allocator);
+            defer ctx.deinit();
+
             ctx.merge_base.clearRetainingCapacity();
             if (args.len > 2) try ctx.merge_base.appendSlice(args[2]);
             try ctx.writeFile(".ctx");
         },
         .status => {
             var ignore = try Ignore.parseFile(".ctxignore", allocator);
+            defer ignore.deinit();
+
             var ctx = try Context.parseFile(".ctx", allocator);
+            defer ctx.deinit();
+
             const stdout = std.io.getStdOut();
             try status.write(stdout.writer(), &ctx, &ignore, allocator);
         },
