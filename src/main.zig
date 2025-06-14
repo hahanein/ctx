@@ -58,28 +58,10 @@ const StatusCodes = struct {
     pub const usage = 2;
 };
 
-pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-
-    var arena = std.heap.ArenaAllocator.init(gpa.allocator());
-    defer arena.deinit();
-
-    const allocator = arena.allocator();
-    const args = try std.process.argsAlloc(allocator);
-
-    if (args.len < 2) {
-        std.debug.print("{s}", .{usage});
-        std.process.exit(StatusCodes.usage);
-    }
-
-    const command_bytes = args[1];
-    const arguments = args[2..];
-    const command = Command.parse(command_bytes) catch {
-        std.debug.print("Unknown command: {s}\n{s}", .{ command_bytes, usage });
-        std.process.exit(StatusCodes.usage);
-    };
-
+fn exec(command: Command, arguments: []const []const u8, allocator: std.mem.Allocator) !void {
+    const stdout = std.io.getStdOut();
+    defer stdout.close();
+    const writer = stdout.writer();
     switch (command) {
         .init => {
             var ctx = Context.init(allocator);
@@ -94,8 +76,7 @@ pub fn main() !void {
             var ctx = try Context.parseFile(".ctx", allocator);
             defer ctx.deinit();
 
-            const stdout = std.io.getStdOut();
-            try renderer.write(stdout.writer(), &ctx, &ignore, allocator);
+            try renderer.write(writer, &ctx, &ignore, allocator);
         },
         .add => {
             var ctx = try Context.parseFile(".ctx", allocator);
@@ -116,7 +97,7 @@ pub fn main() !void {
             defer ctx.deinit();
 
             ctx.merge_base.clearRetainingCapacity();
-            if (args.len > 2) try ctx.merge_base.appendSlice(args[2]);
+            if (arguments.len > 0) try ctx.merge_base.appendSlice(arguments[0]);
             try ctx.writeFile(".ctx");
         },
         .status => {
@@ -126,16 +107,46 @@ pub fn main() !void {
             var ctx = try Context.parseFile(".ctx", allocator);
             defer ctx.deinit();
 
-            const stdout = std.io.getStdOut();
-            try status.write(stdout.writer(), &ctx, &ignore, allocator);
+            try status.write(writer, &ctx, &ignore, allocator);
         },
         .version => {
-            std.debug.print("ctx version v{s}\n", .{build_options.version});
+            try writer.print("ctx version v{s}\n", .{build_options.version});
         },
         .help => {
-            std.debug.print("{s}", .{usage});
+            _ = try writer.write(usage);
         },
     }
+}
+
+pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+
+    var arena = std.heap.ArenaAllocator.init(gpa.allocator());
+    defer arena.deinit();
+
+    const allocator = arena.allocator();
+
+    const arguments = try std.process.argsAlloc(allocator);
+    if (arguments.len < 2) {
+        std.debug.print(usage, .{});
+        std.process.exit(StatusCodes.usage);
+    }
+
+    const command_bytes = arguments[1];
+    const command_arguments = arguments[2..];
+    const command = Command.parse(command_bytes) catch {
+        std.debug.print("Unknown command: {s}\n{s}", .{ command_bytes, usage });
+        std.process.exit(StatusCodes.usage);
+    };
+
+    exec(command, command_arguments, allocator) catch |err| switch (err) {
+        error.WorkspaceFileNotFound => {
+            std.debug.print("Fatal: not a ctx workspace\n", .{});
+            std.process.exit(StatusCodes.failure);
+        },
+        else => return err,
+    };
 
     std.process.exit(StatusCodes.success);
 }

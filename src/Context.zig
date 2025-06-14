@@ -37,7 +37,7 @@ const version = 4;
 
 /// Parse a context from a file.
 pub fn parseFile(file_path: []const u8, allocator: std.mem.Allocator) !Context {
-    const file = try std.fs.cwd().openFile(file_path, .{});
+    const file = std.fs.cwd().openFile(file_path, .{}) catch return error.WorkspaceFileNotFound;
     defer file.close();
     const reader = file.reader();
 
