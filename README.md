@@ -11,7 +11,7 @@ zig build -Doptimize=ReleaseFast
 ## Typical workflow
 
 ```bash
-ctx init                      # Create .ctx in the current repo
+ctx init                      # Create new context
 ctx add src/*.zig README.md   # Register files or directories
 ctx merge-base main           # Register merge base to base diff on
 ctx show | wl-copy            # Copy Markdown context to clipboard
