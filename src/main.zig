@@ -65,7 +65,7 @@ fn execute(command: Command, arguments: []const []const u8, allocator: std.mem.A
             try ctx.save();
         },
         .show => {
-            var ignore = try Ignore.parseFile(".ctxignore", allocator);
+            var ignore = try Ignore.load(allocator);
             defer ignore.deinit();
 
             var ctx = try Context.load(allocator);
@@ -96,7 +96,7 @@ fn execute(command: Command, arguments: []const []const u8, allocator: std.mem.A
             try ctx.save();
         },
         .status => {
-            var ignore = try Ignore.parseFile(".ctxignore", allocator);
+            var ignore = try Ignore.load(allocator);
             defer ignore.deinit();
 
             var ctx = try Context.load(allocator);

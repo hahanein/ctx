@@ -14,8 +14,10 @@ pub fn deinit(self: *Ignore) void {
     for (self.patterns) |pattern| self.allocator.free(pattern);
 }
 
+const file_path = ".ctxignore";
+
 /// Load patterns from a given file.
-pub fn parseFile(file_path: []const u8, allocator: std.mem.Allocator) !Ignore {
+pub fn load(allocator: std.mem.Allocator) !Ignore {
     var file = try std.fs.cwd().openFile(file_path, .{});
 
     defer file.close();
