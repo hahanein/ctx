@@ -73,12 +73,12 @@ test "print modified" {
     var environment = try Environment.init(allocator);
     defer environment.deinit();
 
+    try environment.run(&.{ "git", "init" });
     try environment.run(&.{ "git", "config", "user.email", "you@example.com" });
     try environment.run(&.{ "git", "config", "user.name", "Your Name" });
 
     try environment.writeFile("birds", "sparrow robin");
     try environment.writeFile("flowers", "rose tulip");
-    try environment.run(&.{ "git", "init" });
     try environment.run(&.{ "git", "add", "birds" });
     try environment.run(&.{ "git", "add", "flowers" });
     try environment.run(&.{ "git", "commit", "-m", "initial commit" });
