@@ -24,7 +24,28 @@ const usage =
     \\
 ;
 
-const exit = struct {
+const Command = enum {
+    init,
+    show,
+    add,
+    rm,
+    merge_base,
+    status,
+    version,
+    help,
+    pub fn parse(bytes: []u8) !Command {
+        _ = std.mem.replace(u8, bytes, "-", "_", bytes);
+        inline for (std.meta.fields(Command)) |command| {
+            if (std.mem.eql(u8, command.name, bytes)) {
+                return @enumFromInt(command.value);
+            }
+        }
+
+        return error.UnknownCommand;
+    }
+};
+
+const StatusCodes = struct {
     pub const success = 0;
     pub const failure = 1;
     pub const usage = 2;
@@ -42,45 +63,56 @@ pub fn main() !void {
 
     if (args.len < 2) {
         std.debug.print("{s}", .{usage});
-        std.process.exit(exit.usage);
+        std.process.exit(StatusCodes.usage);
     }
 
-    const cmd = args[1];
-    const cmd_args = args[2..];
-    if (std.mem.eql(u8, cmd, "init")) {
-        try Context.init(allocator).writeFile(".ctx");
-    } else if (std.mem.eql(u8, cmd, "show")) {
-        var ignore = try Ignore.parseFile(".ctxignore", allocator);
-        var ctx = try Context.parseFile(".ctx", allocator);
-        const stdout = std.io.getStdOut();
-        try renderer.write(stdout.writer(), &ctx, &ignore, allocator);
-    } else if (std.mem.eql(u8, cmd, "add")) {
-        var ctx = try Context.parseFile(".ctx", allocator);
-        try ctx.add(cmd_args);
-        try ctx.writeFile(".ctx");
-    } else if (std.mem.eql(u8, cmd, "rm")) {
-        var ctx = try Context.parseFile(".ctx", allocator);
-        ctx.rm(cmd_args);
-        try ctx.writeFile(".ctx");
-    } else if (std.mem.eql(u8, cmd, "merge-base")) {
-        var ctx = try Context.parseFile(".ctx", allocator);
-        ctx.merge_base.clearRetainingCapacity();
-        if (args.len > 2) try ctx.merge_base.appendSlice(args[2]);
-        try ctx.writeFile(".ctx");
-    } else if (std.mem.eql(u8, cmd, "status")) {
-        var ignore = try Ignore.parseFile(".ctxignore", allocator);
-        var ctx = try Context.parseFile(".ctx", allocator);
-        const stdout = std.io.getStdOut();
-        try status.write(stdout.writer(), &ctx, &ignore, allocator);
-    } else if (std.mem.eql(u8, cmd, "version")) {
-        std.debug.print("ctx version v{s}\n", .{build_options.version});
-    } else if (std.mem.eql(u8, cmd, "help")) {
-        std.debug.print("{s}", .{usage});
-    } else {
-        std.debug.print("Unknown command: {s}\n{s}", .{ cmd, usage });
-        std.process.exit(exit.usage);
+    const command_bytes = args[1];
+    const arguments = args[2..];
+    const command = Command.parse(command_bytes) catch {
+        std.debug.print("Unknown command: {s}\n{s}", .{ command_bytes, usage });
+        std.process.exit(StatusCodes.usage);
+    };
+
+    switch (command) {
+        .init => {
+            try Context.init(allocator).writeFile(".ctx");
+        },
+        .show => {
+            var ignore = try Ignore.parseFile(".ctxignore", allocator);
+            var ctx = try Context.parseFile(".ctx", allocator);
+            const stdout = std.io.getStdOut();
+            try renderer.write(stdout.writer(), &ctx, &ignore, allocator);
+        },
+        .add => {
+            var ctx = try Context.parseFile(".ctx", allocator);
+            try ctx.add(arguments);
+            try ctx.writeFile(".ctx");
+        },
+        .rm => {
+            var ctx = try Context.parseFile(".ctx", allocator);
+            ctx.rm(arguments);
+            try ctx.writeFile(".ctx");
+        },
+        .merge_base => {
+            var ctx = try Context.parseFile(".ctx", allocator);
+            ctx.merge_base.clearRetainingCapacity();
+            if (args.len > 2) try ctx.merge_base.appendSlice(args[2]);
+            try ctx.writeFile(".ctx");
+        },
+        .status => {
+            var ignore = try Ignore.parseFile(".ctxignore", allocator);
+            var ctx = try Context.parseFile(".ctx", allocator);
+            const stdout = std.io.getStdOut();
+            try status.write(stdout.writer(), &ctx, &ignore, allocator);
+        },
+        .version => {
+            std.debug.print("ctx version v{s}\n", .{build_options.version});
+        },
+        .help => {
+            std.debug.print("{s}", .{usage});
+        },
     }
 
-    std.process.exit(exit.success);
+    std.process.exit(StatusCodes.success);
 }
 
