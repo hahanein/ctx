@@ -93,7 +93,7 @@ test "print modified" {
     allocator.free(result.stdout);
     allocator.free(result.stderr);
 
-    try environment.writeFile(".ctxignore", ""); // FIXME(BW): Must be removed
+    try environment.writeFile(".ctxignore", ""); // FIXME(BW): Must be removed with #6
 
     result = try environment.ctx(&.{ "merge-base", "HEAD~1" });
     allocator.free(result.stdout);
