@@ -24,6 +24,6 @@ test "print version" {
     defer alloc.free(result.stderr);
 
     const want = "ctx version v" ++ build_options.version;
-    try std.testing.expect(std.mem.containsAtLeast(u8, result.stderr, 1, want));
+    try std.testing.expect(std.mem.containsAtLeast(u8, result.stdout, 1, want));
 }
 
