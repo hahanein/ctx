@@ -33,7 +33,7 @@ const Command = enum {
     status,
     version,
     help,
-    /// Replace dash with underscore in enum field names to get command names.
+    /// Replace underscore with dash in enum field names to get command names.
     fn format(comptime src: []const u8) [src.len]u8 {
         var buf: [src.len]u8 = undefined;
         for (src, 0..) |char, i| buf[i] = if (char == '_') '-' else char;
