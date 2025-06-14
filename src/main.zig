@@ -62,44 +62,44 @@ fn execute(command: Command, arguments: []const []const u8, allocator: std.mem.A
             var ctx = Context.init(allocator);
             defer ctx.deinit();
 
-            try ctx.writeFile(".ctx");
+            try ctx.save();
         },
         .show => {
             var ignore = try Ignore.parseFile(".ctxignore", allocator);
             defer ignore.deinit();
 
-            var ctx = try Context.parseFile(".ctx", allocator);
+            var ctx = try Context.load(allocator);
             defer ctx.deinit();
 
             try renderer.write(writer, &ctx, &ignore, allocator);
         },
         .add => {
-            var ctx = try Context.parseFile(".ctx", allocator);
+            var ctx = try Context.load(allocator);
             defer ctx.deinit();
 
             try ctx.add(arguments);
-            try ctx.writeFile(".ctx");
+            try ctx.save();
         },
         .rm => {
-            var ctx = try Context.parseFile(".ctx", allocator);
+            var ctx = try Context.load(allocator);
             defer ctx.deinit();
 
             ctx.rm(arguments);
-            try ctx.writeFile(".ctx");
+            try ctx.save();
         },
         .merge_base => {
-            var ctx = try Context.parseFile(".ctx", allocator);
+            var ctx = try Context.load(allocator);
             defer ctx.deinit();
 
             ctx.merge_base.clearRetainingCapacity();
             if (arguments.len > 0) try ctx.merge_base.appendSlice(arguments[0]);
-            try ctx.writeFile(".ctx");
+            try ctx.save();
         },
         .status => {
             var ignore = try Ignore.parseFile(".ctxignore", allocator);
             defer ignore.deinit();
 
-            var ctx = try Context.parseFile(".ctx", allocator);
+            var ctx = try Context.load(allocator);
             defer ctx.deinit();
 
             try status.write(writer, &ctx, &ignore, allocator);

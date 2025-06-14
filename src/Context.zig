@@ -34,9 +34,10 @@ pub fn rm(self: *Context, paths: []const []const u8) void {
 
 const magic = 0x4354_5800; // "CTX\0"
 const version = 4;
+const file_path = ".ctx";
 
 /// Parse a context from a file.
-pub fn parseFile(file_path: []const u8, allocator: std.mem.Allocator) !Context {
+pub fn load(allocator: std.mem.Allocator) !Context {
     const file = std.fs.cwd().openFile(file_path, .{}) catch return error.WorkspaceFileNotFound;
     defer file.close();
     const reader = file.reader();
@@ -68,9 +69,8 @@ pub fn parseFile(file_path: []const u8, allocator: std.mem.Allocator) !Context {
         .merge_base = std.ArrayList(u8).fromOwnedSlice(allocator, merge_base),
     };
 }
-
 /// Write the context to a file.
-pub fn writeFile(self: *const Context, file_path: []const u8) !void {
+pub fn save(self: *const Context) !void {
     const file = try std.fs.cwd().createFile(file_path, .{ .truncate = true });
     defer file.close();
     const writer = file.writer();
