@@ -48,8 +48,8 @@ const Environment = struct {
         defer allocator.free(result.stdout);
         defer allocator.free(result.stderr);
         std.testing.expect(result.term == .Exited and result.term.Exited == 0) catch |err| {
-            std.debug.print("stdout: {}\n", .{result.stdout});
-            std.debug.print("stderr: {}\n", .{result.stderr});
+            std.debug.print("stdout: {s}\n", .{result.stdout});
+            std.debug.print("stderr: {s}\n", .{result.stderr});
             return err;
         };
     }
