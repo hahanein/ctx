@@ -47,7 +47,11 @@ const Environment = struct {
         const result = try Child.run(.{ .argv = argv, .cwd_dir = self.tmp_dir.dir, .allocator = self.allocator });
         defer allocator.free(result.stdout);
         defer allocator.free(result.stderr);
-        try std.testing.expect(result.term == .Exited and result.term.Exited == 0);
+        std.testing.expect(result.term == .Exited and result.term.Exited == 0) catch |err| {
+            std.debug.print("stdout: {}\n", .{result.stdout});
+            std.debug.print("stderr: {}\n", .{result.stderr});
+            return err;
+        };
     }
     /// Runs a command in the temporary directory and returns the result.
     pub fn runCtx(self: *const Environment, argv: []const []const u8) !Child.RunResult {
