@@ -53,7 +53,7 @@ const Environment = struct {
             return err;
         };
     }
-    /// Runs a command in the temporary directory and returns the result.
+    /// Runs a ctx command in the temporary directory and returns the result.
     pub fn ctx(self: *const Environment, argv: []const []const u8) !Child.RunResult {
         var argv_ = try self.allocator.alloc([]const u8, 1 + argv.len);
         defer self.allocator.free(argv_);
@@ -73,8 +73,8 @@ test "print modified" {
     var environment = try Environment.init(allocator);
     defer environment.deinit();
 
-    try environment.run(&.{ "git", "config", "--global", "user.email", "you@example.com" });
-    try environment.run(&.{ "git", "config", "--global", "user.name", "Your Name" });
+    try environment.run(&.{ "git", "config", "user.email", "you@example.com" });
+    try environment.run(&.{ "git", "config", "user.name", "Your Name" });
 
     try environment.writeFile("birds", "sparrow robin");
     try environment.writeFile("flowers", "rose tulip");
