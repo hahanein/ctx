@@ -54,7 +54,7 @@ const Environment = struct {
         };
     }
     /// Runs a command in the temporary directory and returns the result.
-    pub fn runCtx(self: *const Environment, argv: []const []const u8) !Child.RunResult {
+    pub fn ctx(self: *const Environment, argv: []const []const u8) !Child.RunResult {
         var argv_ = try self.allocator.alloc([]const u8, 1 + argv.len);
         defer self.allocator.free(argv_);
         argv_[0] = self.exe_abs_path;
@@ -73,33 +73,33 @@ test "print modified" {
     var environment = try Environment.init(allocator);
     defer environment.deinit();
 
-    try environment.run(&[_][]const u8{ "git", "config", "--global", "user.email", "you@example.com" });
-    try environment.run(&[_][]const u8{ "git", "config", "--global", "user.name", "Your Name" });
+    try environment.run(&.{ "git", "config", "--global", "user.email", "you@example.com" });
+    try environment.run(&.{ "git", "config", "--global", "user.name", "Your Name" });
 
     try environment.writeFile("birds", "sparrow robin");
     try environment.writeFile("flowers", "rose tulip");
-    try environment.run(&[_][]const u8{ "git", "init" });
-    try environment.run(&[_][]const u8{ "git", "add", "birds" });
-    try environment.run(&[_][]const u8{ "git", "add", "flowers" });
-    try environment.run(&[_][]const u8{ "git", "commit", "-m", "initial commit" });
+    try environment.run(&.{ "git", "init" });
+    try environment.run(&.{ "git", "add", "birds" });
+    try environment.run(&.{ "git", "add", "flowers" });
+    try environment.run(&.{ "git", "commit", "-m", "initial commit" });
 
     try environment.writeFile("birds", "cardinal");
     try environment.writeFile("flowers", "orchid lily");
-    try environment.run(&[_][]const u8{ "git", "add", "birds" });
-    try environment.run(&[_][]const u8{ "git", "add", "flowers" });
-    try environment.run(&[_][]const u8{ "git", "commit", "-m", "update birds and flowers" });
+    try environment.run(&.{ "git", "add", "birds" });
+    try environment.run(&.{ "git", "add", "flowers" });
+    try environment.run(&.{ "git", "commit", "-m", "update birds and flowers" });
 
-    var result = try environment.runCtx(&[_][]const u8{"init"});
+    var result = try environment.ctx(&.{"init"});
     allocator.free(result.stdout);
     allocator.free(result.stderr);
 
     try environment.writeFile(".ctxignore", ""); // FIXME(BW): Must be removed
 
-    result = try environment.runCtx(&[_][]const u8{ "merge-base", "HEAD~1" });
+    result = try environment.ctx(&.{ "merge-base", "HEAD~1" });
     allocator.free(result.stdout);
     allocator.free(result.stderr);
 
-    result = try environment.runCtx(&[_][]const u8{"status"});
+    result = try environment.ctx(&.{"status"});
     defer allocator.free(result.stdout);
     defer allocator.free(result.stderr);
 
