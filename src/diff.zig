@@ -66,7 +66,7 @@ pub fn PathIterator() type {
         pub fn next(self: *@This()) !?*[]u8 {
             if (self.done) return null;
 
-            // The Reader is created on demand from the live buffered_reader.
+            self.line.clearRetainingCapacity();
             self.buffered_reader.reader().streamUntilDelimiter(self.line.writer(), '\n', null) catch |err| switch (err) {
                 error.EndOfStream => {
                     _ = try self.child.wait();
