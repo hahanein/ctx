@@ -84,7 +84,7 @@ fn run(command: Command, arguments: []const []const u8, allocator: std.mem.Alloc
             var ctx = try Context.load(allocator);
             defer ctx.deinit();
 
-            ctx.rm(arguments);
+            try ctx.rm(arguments);
             try ctx.save();
         },
         .merge_base => {

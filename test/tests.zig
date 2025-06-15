@@ -226,3 +226,42 @@ test "print diff and current file contents" {
     };
 }
 
+test "add files from sub-directory" {
+    var runner = try Runner.init(allocator);
+    defer runner.deinit();
+
+    try runner.dash(
+        \\ mkdir subdir
+        \\ echo "sparrow\nrobin\n" > subdir/birds
+        \\
+        \\ ctx init
+        \\ cd subdir
+        \\ ctx add birds
+    );
+
+    const result = try runner.run(&.{ "ctx", "status" });
+    defer allocator.free(result.stdout);
+    defer allocator.free(result.stderr);
+
+    const want = try std.mem.replaceOwned(u8, allocator,
+        \\Estimated token count: 14
+        \\Merge base: 
+        \\Modified:
+        \\Paths:
+        \\{Tab}subdir/birds
+    , "{Tab}", "\t");
+    defer allocator.free(want);
+
+    std.testing.expect(result.term == .Exited and result.term.Exited == 0) catch |err| {
+        std.debug.print("stdout: {s}\n", .{result.stdout});
+        std.debug.print("stderr: {s}\n", .{result.stderr});
+        return err;
+    };
+
+    std.testing.expect(std.mem.containsAtLeast(u8, result.stdout, 1, want)) catch |err| {
+        std.debug.print("stdout: {s}\n", .{result.stdout});
+        std.debug.print("stderr: {s}\n", .{result.stderr});
+        return err;
+    };
+}
+
