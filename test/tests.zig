@@ -59,17 +59,12 @@ test "print modified files" {
         \\ echo "orchid lily" > flowers
         \\ git add birds flowers
         \\ git commit -m "update birds and flowers"
+        \\
+        \\ ctx init
+        \\ ctx merge-base HEAD~1
     );
 
-    var result = try runner.ctx(&.{"init"});
-    allocator.free(result.stdout);
-    allocator.free(result.stderr);
-
-    result = try runner.ctx(&.{ "merge-base", "HEAD~1" });
-    allocator.free(result.stdout);
-    allocator.free(result.stderr);
-
-    result = try runner.ctx(&.{"status"});
+    const result = try runner.ctx(&.{"status"});
     defer allocator.free(result.stdout);
     defer allocator.free(result.stderr);
 
@@ -109,19 +104,10 @@ test "respect ignore file and not print modified file" {
         \\ git commit -m "initial commit"
         \\ echo "cardinal" > birds
         \\ git add birds
+        \\
+        \\ ctx init
+        \\ ctx merge-base HEAD
     );
-
-    {
-        const result = try runner.ctx(&.{"init"});
-        allocator.free(result.stdout);
-        allocator.free(result.stderr);
-    }
-
-    {
-        const result = try runner.ctx(&.{ "merge-base", "HEAD" });
-        allocator.free(result.stdout);
-        allocator.free(result.stderr);
-    }
 
     {
         const result = try runner.ctx(&.{"status"});
@@ -194,17 +180,12 @@ test "print diff and current file contents" {
         \\ git commit -m "initial commit"
         \\ echo "sparrow\ncardinal\n" > birds
         \\ git add birds
+        \\
+        \\ ctx init
+        \\ ctx merge-base HEAD
     );
 
-    var result = try runner.ctx(&.{"init"});
-    allocator.free(result.stdout);
-    allocator.free(result.stderr);
-
-    result = try runner.ctx(&.{ "merge-base", "HEAD" });
-    allocator.free(result.stdout);
-    allocator.free(result.stderr);
-
-    result = try runner.ctx(&.{"show"});
+    const result = try runner.ctx(&.{"show"});
     defer allocator.free(result.stdout);
     defer allocator.free(result.stderr);
 
