@@ -61,8 +61,8 @@ fn run(command: Command, arguments: []const []const u8, allocator: std.mem.Alloc
         .init => {
             var ctx = Context.init(allocator);
             defer ctx.deinit();
-
             try ctx.save();
+            try writer.print("Initialized ctx workspace {s}/.ctx\n", .{ctx.workspace_root});
         },
         .show => {
             var ignore = try Ignore.load(allocator);
