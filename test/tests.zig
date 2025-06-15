@@ -47,19 +47,19 @@ test "print modified files" {
     var runner = try Runner.init(allocator);
     defer runner.deinit();
 
-    try runner.run(&.{ "git", "init" });
-    try runner.run(&.{ "git", "config", "user.email", "you@example.com" });
-    try runner.run(&.{ "git", "config", "user.name", "Your Name" });
-
-    try runner.writeFile("birds", "sparrow robin");
-    try runner.writeFile("flowers", "rose tulip");
-    try runner.run(&.{ "git", "add", "birds", "flowers" });
-    try runner.run(&.{ "git", "commit", "-m", "initial commit" });
-
-    try runner.writeFile("birds", "cardinal");
-    try runner.writeFile("flowers", "orchid lily");
-    try runner.run(&.{ "git", "add", "birds", "flowers" });
-    try runner.run(&.{ "git", "commit", "-m", "update birds and flowers" });
+    try runner.dash(
+        \\ git init
+        \\ git config user.email you@example.com
+        \\ git config user.name "Your Name"
+        \\ echo "sparrow robin" > birds
+        \\ echo "rose tulip" > flowers
+        \\ git add birds flowers
+        \\ git commit -m "initial commit"
+        \\ echo "cardinal" > birds
+        \\ echo "orchid lily" > flowers
+        \\ git add birds flowers
+        \\ git commit -m "update birds and flowers"
+    );
 
     var result = try runner.ctx(&.{"init"});
     allocator.free(result.stdout);
@@ -74,7 +74,7 @@ test "print modified files" {
     defer allocator.free(result.stderr);
 
     const want = try std.mem.replaceOwned(u8, allocator,
-        \\Estimated token count: 71
+        \\Estimated token count: 57
         \\Merge base: HEAD~1
         \\Modified:
         \\{Tab}birds

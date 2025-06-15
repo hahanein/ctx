@@ -34,6 +34,18 @@ pub fn run(self: *const Runner, argv: []const []const u8) !void {
     };
 }
 
+/// Runs a dash command in the temporary directory.
+pub fn dash(self: *const Runner, command_string: []const u8) !void {
+    const result = try Child.run(.{ .argv = &.{ "dash", "-c", command_string }, .cwd_dir = self.tmp_dir.dir, .allocator = self.allocator });
+    defer self.allocator.free(result.stdout);
+    defer self.allocator.free(result.stderr);
+    std.testing.expect(result.term == .Exited and result.term.Exited == 0) catch |err| {
+        std.debug.print("stdout: {s}\n", .{result.stdout});
+        std.debug.print("stderr: {s}\n", .{result.stderr});
+        return err;
+    };
+}
+
 /// Runs a ctx command in the temporary directory and returns the result.
 pub fn ctx(self: *const Runner, argv: []const []const u8) !Child.RunResult {
     var argv_ = try self.allocator.alloc([]const u8, 1 + argv.len);
