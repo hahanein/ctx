@@ -1,6 +1,5 @@
 const std = @import("std");
 const allocator = std.testing.allocator;
-const Child = std.process.Child;
 const build_options = @import("build_options");
 const Runner = @import("Runner.zig");
 
