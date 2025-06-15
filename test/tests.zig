@@ -65,8 +65,6 @@ test "print modified files" {
     allocator.free(result.stdout);
     allocator.free(result.stderr);
 
-    try runner.writeFile(".ctxignore", ""); // FIXME(BW): Must be removed with #6
-
     result = try runner.ctx(&.{ "merge-base", "HEAD~1" });
     allocator.free(result.stdout);
     allocator.free(result.stderr);
@@ -98,6 +96,55 @@ test "print modified files" {
     };
 }
 
+test "respect ignore file and not print modified file" {
+    var runner = try Runner.init(allocator);
+    defer runner.deinit();
+
+    try runner.run(&.{ "git", "init" });
+    try runner.run(&.{ "git", "config", "user.email", "you@example.com" });
+    try runner.run(&.{ "git", "config", "user.name", "Your Name" });
+
+    try runner.writeFile("birds", "sparrow robin");
+    try runner.run(&.{ "git", "add", "birds" });
+    try runner.run(&.{ "git", "commit", "-m", "initial commit" });
+
+    try runner.writeFile("birds", "cardinal");
+    try runner.run(&.{ "git", "add", "birds" });
+
+    try runner.writeFile(".ctxignore", "birds");
+
+    var result = try runner.ctx(&.{"init"});
+    allocator.free(result.stdout);
+    allocator.free(result.stderr);
+
+    result = try runner.ctx(&.{ "merge-base", "HEAD" });
+    allocator.free(result.stdout);
+    allocator.free(result.stderr);
+
+    result = try runner.ctx(&.{"status"});
+    defer allocator.free(result.stdout);
+    defer allocator.free(result.stderr);
+
+    const want =
+        \\Estimated token count: 51
+        \\Merge base: HEAD
+        \\Modified:
+        \\Paths:
+    ;
+
+    std.testing.expect(result.term == .Exited and result.term.Exited == 0) catch |err| {
+        std.debug.print("stdout: {s}\n", .{result.stdout});
+        std.debug.print("stderr: {s}\n", .{result.stderr});
+        return err;
+    };
+
+    std.testing.expect(std.mem.containsAtLeast(u8, result.stdout, 1, want)) catch |err| {
+        std.debug.print("stdout: {s}\n", .{result.stdout});
+        std.debug.print("stderr: {s}\n", .{result.stderr});
+        return err;
+    };
+}
+
 test "print diff and current file contents" {
     var runner = try Runner.init(allocator);
     defer runner.deinit();
@@ -105,6 +152,7 @@ test "print diff and current file contents" {
     try runner.run(&.{ "git", "init" });
     try runner.run(&.{ "git", "config", "user.email", "you@example.com" });
     try runner.run(&.{ "git", "config", "user.name", "Your Name" });
+    try runner.run(&.{ "git", "config", "diff.mnemonicPrefix", "false" });
 
     try runner.writeFile("birds", "sparrow\nrobin\n");
     try runner.run(&.{ "git", "add", "birds" });
@@ -116,8 +164,6 @@ test "print diff and current file contents" {
     var result = try runner.ctx(&.{"init"});
     allocator.free(result.stdout);
     allocator.free(result.stderr);
-
-    try runner.writeFile(".ctxignore", ""); // FIXME(BW): Must be removed with #6
 
     result = try runner.ctx(&.{ "merge-base", "HEAD" });
     allocator.free(result.stdout);

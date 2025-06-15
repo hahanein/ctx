@@ -18,7 +18,10 @@ const file_path = ".ctxignore";
 
 /// Load patterns from a given file.
 pub fn load(allocator: std.mem.Allocator) !Ignore {
-    var file = try std.fs.cwd().openFile(file_path, .{});
+    var file = std.fs.cwd().openFile(file_path, .{}) catch {
+        // When the file does not exist, return an empty ignore list.
+        return .{ .allocator = allocator, .patterns = &.{} };
+    };
 
     defer file.close();
 
