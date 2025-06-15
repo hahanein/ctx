@@ -119,7 +119,7 @@ test "print diff and current file contents" {
 
     try runner.writeFile(".ctxignore", ""); // FIXME(BW): Must be removed with #6
 
-    result = try runner.ctx(&.{ "merge-base", "main" });
+    result = try runner.ctx(&.{ "merge-base", "HEAD" });
     allocator.free(result.stdout);
     allocator.free(result.stderr);
 
