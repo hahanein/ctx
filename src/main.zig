@@ -52,8 +52,8 @@ const Command = enum {
     }
 };
 
-/// Execute command with arguments.
-fn execute(command: Command, arguments: []const []const u8, allocator: std.mem.Allocator) !void {
+/// Run a ctx command.
+fn run(command: Command, arguments: []const []const u8, allocator: std.mem.Allocator) !void {
     const stdout = std.io.getStdOut();
     defer stdout.close();
     const writer = stdout.writer();
@@ -129,6 +129,8 @@ pub fn main() !void {
     const allocator = arena.allocator();
 
     const arguments = try std.process.argsAlloc(allocator);
+    defer allocator.free(arguments);
+
     if (arguments.len < 2) {
         std.debug.print(usage, .{});
         std.process.exit(StatusCodes.usage);
@@ -141,7 +143,7 @@ pub fn main() !void {
         std.process.exit(StatusCodes.usage);
     };
 
-    execute(command, command_arguments, allocator) catch |err| switch (err) {
+    run(command, command_arguments, allocator) catch |err| switch (err) {
         error.WorkspaceFileNotFound => {
             std.debug.print("Fatal: not a ctx workspace\n", .{});
             std.process.exit(StatusCodes.failure);
