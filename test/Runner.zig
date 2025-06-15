@@ -15,6 +15,22 @@ pub fn init(allocator: std.mem.Allocator) !Runner {
     const bin_path = try std.fs.realpathAlloc(allocator, "zig-out/bin");
     defer allocator.free(bin_path);
 
+    {
+        // Open the directory you want to list. "." means “current working dir”.
+        var dir = try std.fs.cwd().openDir(bin_path, .{});
+        defer dir.close();
+
+        // Create an iterator. `.max_depth = 1` means “don’t recurse”.
+        var it = try dir.iterate(allocator, .{ .max_depth = 1 });
+        defer it.deinit();
+
+        std.debug.print("All files in zig-out/bin\n", .{});
+        while (try it.next()) |entry| {
+            // entry.kind is .file, .dir, .sym_link, …
+            std.debug.print("{s}\n", .{entry.path});
+        }
+    }
+
     const path = try std.mem.concat(allocator, u8, &.{ current_path, ":", bin_path });
 
     var env_map = std.process.EnvMap.init(allocator);
