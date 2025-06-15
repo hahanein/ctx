@@ -15,8 +15,6 @@ pub fn init(allocator: std.mem.Allocator) !Runner {
     const bin_path = try std.fs.realpathAlloc(allocator, "zig-out/bin");
     defer allocator.free(bin_path);
 
-    std.debug.print("path: {s}\n", .{current_path}); // TEST
-
     const path = try std.mem.concat(allocator, u8, &.{ current_path, ":", bin_path });
 
     var env_map = std.process.EnvMap.init(allocator);
