@@ -131,10 +131,10 @@ test "print diff and current file contents" {
         \\# Diff
         \\
         \\```diff
-        \\diff --git c/birds i/birds
+        \\diff --git a/birds b/birds
         \\index 739e843..ae9d5cc 100644
-        \\--- c/birds
-        \\+++ i/birds
+        \\--- a/birds
+        \\+++ b/birds
         \\@@ -1,2 +1,2 @@
         \\ sparrow
         \\-robin
