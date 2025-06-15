@@ -10,7 +10,7 @@ env_map: std.process.EnvMap,
 pub fn init(allocator: std.mem.Allocator) !Runner {
     var env_map = try std.process.getEnvMap(allocator);
 
-    const current_path = env_map.get("PATH") orelse return error.MissingPathEnvVar;
+    const current_path = env_map.get("PATH") orelse unreachable;
 
     const bin_path = try std.fs.realpathAlloc(allocator, "zig-out/bin");
     defer allocator.free(bin_path);
