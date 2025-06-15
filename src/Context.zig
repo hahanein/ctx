@@ -31,21 +31,18 @@ pub fn deinit(self: *Context) void {
 
 /// Add paths to the context.
 pub fn add(self: *Context, paths: []const []const u8) !void {
-    for (paths) |path| _ = try self.paths.put(try self.relative(path), {});
+    for (paths) |path| {
+        const relative = try std.fs.path.relative(self.allocator, self.workspace_root, path);
+        _ = try self.paths.put(relative, {});
+    }
 }
 
 /// Remove paths from the context.
 pub fn rm(self: *Context, paths: []const []const u8) !void {
-    for (paths) |path| if (self.paths.fetchRemove(try self.relative(path))) |pair| self.allocator.free(pair.key);
-}
-
-/// Compute the path relative to the workspace root.
-fn relative(self: *Context, path: []const u8) ![]u8 {
-    const cwd = try std.fs.cwd().realpathAlloc(self.allocator, ".");
-    defer self.allocator.free(cwd);
-    const resolved = if (std.fs.path.isAbsolute(path)) try self.allocator.dupe(u8, path) else try std.fs.path.join(self.allocator, &.{ cwd, path });
-    defer self.allocator.free(resolved);
-    return try std.fs.path.relative(self.allocator, self.workspace_root, resolved);
+    for (paths) |path| {
+        const relative = try std.fs.path.relative(self.allocator, self.workspace_root, path);
+        if (self.paths.fetchRemove(relative)) |pair| self.allocator.free(pair.key);
+    }
 }
 
 const magic = 0x4354_5800; // "CTX\0"
