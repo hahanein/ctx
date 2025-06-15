@@ -24,7 +24,7 @@ pub fn write(writer: anytype, ctx: *Context, ignore: *const Ignore, allocator: s
             // print them below.
             if (ctx.paths.contains(path.*)) continue;
             if (try ignore.isIgnored(path.*)) continue;
-            try writeFile(writer, path.*);
+            try writeFile(writer, path.*, ctx.workspace_root);
             try writer.writeAll("\n\n");
         }
     }
@@ -34,15 +34,22 @@ pub fn write(writer: anytype, ctx: *Context, ignore: *const Ignore, allocator: s
         var it = ctx.paths.keyIterator();
         while (it.next()) |path| {
             if (try ignore.isIgnored(path.*)) continue;
-            try writeFile(writer, path.*);
+            try writeFile(writer, path.*, ctx.workspace_root);
             try writer.writeAll("\n\n");
         }
     }
 }
 
 /// Write the file at the given path to the given writer.
-fn writeFile(writer: anytype, path: []const u8) !void {
-    var file = std.fs.cwd().openFile(path, .{}) catch {
+fn writeFile(
+    writer: anytype,
+    path: []const u8,
+    workspace_root: []const u8,
+) !void {
+    var dir = try std.fs.openDirAbsolute(workspace_root, .{});
+    defer dir.close();
+
+    var file = dir.openFile(path, .{}) catch {
         try std.fmt.format(writer, "**Deleted:** `{s}`", .{path});
         return;
     };

@@ -7,7 +7,7 @@ test "print usage message and exit with usage error status" {
     var runner = try Runner.init(allocator);
     defer runner.deinit();
 
-    const result = try runner.run(&.{"ctx"});
+    const result = try runner.run(.{ .argv = &.{"ctx"} });
     defer allocator.free(result.stdout);
     defer allocator.free(result.stderr);
 
@@ -30,7 +30,7 @@ test "print version" {
     var runner = try Runner.init(allocator);
     defer runner.deinit();
 
-    const result = try runner.run(&.{ "ctx", "version" });
+    const result = try runner.run(.{ .argv = &.{ "ctx", "version" } });
     defer allocator.free(result.stdout);
     defer allocator.free(result.stderr);
 
@@ -48,23 +48,23 @@ test "print modified files" {
     defer runner.deinit();
 
     try runner.dash(
-        \\ git init
-        \\ git config user.email you@example.com
-        \\ git config user.name "Your Name"
-        \\ echo "sparrow robin" > birds
-        \\ echo "rose tulip" > flowers
-        \\ git add birds flowers
-        \\ git commit -m "initial commit"
-        \\ echo "cardinal" > birds
-        \\ echo "orchid lily" > flowers
-        \\ git add birds flowers
-        \\ git commit -m "update birds and flowers"
+        \\git init
+        \\git config user.email you@example.com
+        \\git config user.name "Your Name"
+        \\echo "sparrow robin" > birds
+        \\echo "rose tulip" > flowers
+        \\git add birds flowers
+        \\git commit -m "initial commit"
+        \\echo "cardinal" > birds
+        \\echo "orchid lily" > flowers
+        \\git add birds flowers
+        \\git commit -m "update birds and flowers"
         \\
-        \\ ctx init
-        \\ ctx merge-base HEAD~1
+        \\ctx init
+        \\ctx merge-base HEAD~1
     );
 
-    const result = try runner.run(&.{ "ctx", "status" });
+    const result = try runner.run(.{ .argv = &.{ "ctx", "status" } });
     defer allocator.free(result.stdout);
     defer allocator.free(result.stderr);
 
@@ -96,21 +96,21 @@ test "respect ignore file and not print modified file" {
     defer runner.deinit();
 
     try runner.dash(
-        \\ git init
-        \\ git config user.email you@example.com
-        \\ git config user.name "Your Name"
-        \\ echo "sparrow robin" > birds
-        \\ git add birds
-        \\ git commit -m "initial commit"
-        \\ echo "cardinal" > birds
-        \\ git add birds
+        \\git init
+        \\git config user.email you@example.com
+        \\git config user.name "Your Name"
+        \\echo "sparrow robin" > birds
+        \\git add birds
+        \\git commit -m "initial commit"
+        \\echo "cardinal" > birds
+        \\git add birds
         \\
-        \\ ctx init
-        \\ ctx merge-base HEAD
+        \\ctx init
+        \\ctx merge-base HEAD
     );
 
     {
-        const result = try runner.run(&.{ "ctx", "status" });
+        const result = try runner.run(.{ .argv = &.{ "ctx", "status" } });
         defer allocator.free(result.stdout);
         defer allocator.free(result.stderr);
 
@@ -141,7 +141,7 @@ test "respect ignore file and not print modified file" {
     );
 
     {
-        const result = try runner.run(&.{ "ctx", "status" });
+        const result = try runner.run(.{ .argv = &.{ "ctx", "status" } });
         defer allocator.free(result.stdout);
         defer allocator.free(result.stderr);
 
@@ -171,21 +171,21 @@ test "print diff and current file contents" {
     defer runner.deinit();
 
     try runner.dash(
-        \\ git init
-        \\ git config user.email you@example.com
-        \\ git config user.name "Your Name"
-        \\ git config diff.mnemonicPrefix false
-        \\ echo "sparrow\nrobin\n" > birds
-        \\ git add birds
-        \\ git commit -m "initial commit"
-        \\ echo "sparrow\ncardinal\n" > birds
-        \\ git add birds
+        \\git init
+        \\git config user.email you@example.com
+        \\git config user.name "Your Name"
+        \\git config diff.mnemonicPrefix false
+        \\echo "sparrow\nrobin\n" > birds
+        \\git add birds
+        \\git commit -m "initial commit"
+        \\echo "sparrow\ncardinal\n" > birds
+        \\git add birds
         \\
-        \\ ctx init
-        \\ ctx merge-base HEAD
+        \\ctx init
+        \\ctx merge-base HEAD
     );
 
-    const result = try runner.run(&.{ "ctx", "show" });
+    const result = try runner.run(.{ .argv = &.{ "ctx", "show" } });
     defer allocator.free(result.stdout);
     defer allocator.free(result.stderr);
 
@@ -226,20 +226,20 @@ test "print diff and current file contents" {
     };
 }
 
-test "add files from sub-directory" {
+test "add file from sub-directory" {
     var runner = try Runner.init(allocator);
     defer runner.deinit();
 
     try runner.dash(
-        \\ mkdir subdir
-        \\ echo "sparrow\nrobin\n" > subdir/birds
+        \\mkdir subdir
+        \\echo "sparrow\nrobin\n" > subdir/birds
         \\
-        \\ ctx init
-        \\ cd subdir
-        \\ ctx add birds
+        \\ctx init
+        \\cd subdir
+        \\ctx add birds
     );
 
-    const result = try runner.run(&.{ "ctx", "status" });
+    const result = try runner.run(.{ .argv = &.{ "ctx", "status" } });
     defer allocator.free(result.stdout);
     defer allocator.free(result.stderr);
 
@@ -251,6 +251,46 @@ test "add files from sub-directory" {
         \\{Tab}subdir/birds
     , "{Tab}", "\t");
     defer allocator.free(want);
+
+    std.testing.expect(result.term == .Exited and result.term.Exited == 0) catch |err| {
+        std.debug.print("stdout: {s}\n", .{result.stdout});
+        std.debug.print("stderr: {s}\n", .{result.stderr});
+        return err;
+    };
+
+    std.testing.expect(std.mem.containsAtLeast(u8, result.stdout, 1, want)) catch |err| {
+        std.debug.print("stdout: {s}\n", .{result.stdout});
+        std.debug.print("stderr: {s}\n", .{result.stderr});
+        return err;
+    };
+}
+
+test "show file from sub-directory" {
+    var runner = try Runner.init(allocator);
+    defer runner.deinit();
+
+    try runner.dash(
+        \\mkdir subdir
+        \\
+        \\echo "sparrow\nrobin\n" > birds
+        \\
+        \\ctx init
+        \\ctx add birds
+    );
+
+    const result = try runner.run(.{ .argv = &.{ "ctx", "show" }, .cwd = "subdir" });
+    defer allocator.free(result.stdout);
+    defer allocator.free(result.stderr);
+
+    const want =
+        \\# Files
+        \\
+        \\```text path=birds
+        \\sparrow
+        \\robin
+        \\
+        \\```
+    ;
 
     std.testing.expect(result.term == .Exited and result.term.Exited == 0) catch |err| {
         std.debug.print("stdout: {s}\n", .{result.stdout});

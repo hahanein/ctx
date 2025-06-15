@@ -52,11 +52,19 @@ pub fn dash(self: *const Runner, command_string: []const u8) !void {
 }
 
 /// Runs a command in the temporary directory and returns the result.
-pub fn run(self: *const Runner, argv: []const []const u8) !Child.RunResult {
+pub fn run(self: *const Runner, args: struct {
+    argv: []const []const u8,
+    cwd: ?[]const u8 = null,
+}) !Child.RunResult {
+    const cwd_dir = if (args.cwd) |cwd|
+        try self.tmp_dir.dir.openDir(cwd, .{})
+    else
+        self.tmp_dir.dir;
+
     return Child.run(.{
         .env_map = &self.env_map,
-        .argv = argv,
-        .cwd_dir = self.tmp_dir.dir,
+        .argv = args.argv,
+        .cwd_dir = cwd_dir,
         .allocator = self.allocator,
     });
 }
