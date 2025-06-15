@@ -111,38 +111,71 @@ test "respect ignore file and not print modified file" {
     try runner.writeFile("birds", "cardinal");
     try runner.run(&.{ "git", "add", "birds" });
 
+    {
+        const result = try runner.ctx(&.{"init"});
+        defer allocator.free(result.stdout);
+        defer allocator.free(result.stderr);
+    }
+
+    {
+        const result = try runner.ctx(&.{ "merge-base", "HEAD" });
+        defer allocator.free(result.stdout);
+        defer allocator.free(result.stderr);
+    }
+
+    {
+        const result = try runner.ctx(&.{"status"});
+        defer allocator.free(result.stdout);
+        defer allocator.free(result.stderr);
+
+        const want = try std.mem.replaceOwned(u8, allocator,
+            \\Estimated token count: 59
+            \\Merge base: HEAD
+            \\Modified:
+            \\{Tab}birds
+            \\Paths:
+        , "{Tab}", "\t");
+        defer allocator.free(want);
+
+        std.testing.expect(result.term == .Exited and result.term.Exited == 0) catch |err| {
+            std.debug.print("stdout: {s}\n", .{result.stdout});
+            std.debug.print("stderr: {s}\n", .{result.stderr});
+            return err;
+        };
+
+        std.testing.expect(std.mem.containsAtLeast(u8, result.stdout, 1, want)) catch |err| {
+            std.debug.print("stdout: {s}\n", .{result.stdout});
+            std.debug.print("stderr: {s}\n", .{result.stderr});
+            return err;
+        };
+    }
+
     try runner.writeFile(".ctxignore", "birds");
 
-    var result = try runner.ctx(&.{"init"});
-    allocator.free(result.stdout);
-    allocator.free(result.stderr);
+    {
+        const result = try runner.ctx(&.{"status"});
+        defer allocator.free(result.stdout);
+        defer allocator.free(result.stderr);
 
-    result = try runner.ctx(&.{ "merge-base", "HEAD" });
-    allocator.free(result.stdout);
-    allocator.free(result.stderr);
+        const want =
+            \\Estimated token count: 51
+            \\Merge base: HEAD
+            \\Modified:
+            \\Paths:
+        ;
 
-    result = try runner.ctx(&.{"status"});
-    defer allocator.free(result.stdout);
-    defer allocator.free(result.stderr);
+        std.testing.expect(result.term == .Exited and result.term.Exited == 0) catch |err| {
+            std.debug.print("stdout: {s}\n", .{result.stdout});
+            std.debug.print("stderr: {s}\n", .{result.stderr});
+            return err;
+        };
 
-    const want =
-        \\Estimated token count: 51
-        \\Merge base: HEAD
-        \\Modified:
-        \\Paths:
-    ;
-
-    std.testing.expect(result.term == .Exited and result.term.Exited == 0) catch |err| {
-        std.debug.print("stdout: {s}\n", .{result.stdout});
-        std.debug.print("stderr: {s}\n", .{result.stderr});
-        return err;
-    };
-
-    std.testing.expect(std.mem.containsAtLeast(u8, result.stdout, 1, want)) catch |err| {
-        std.debug.print("stdout: {s}\n", .{result.stdout});
-        std.debug.print("stderr: {s}\n", .{result.stderr});
-        return err;
-    };
+        std.testing.expect(std.mem.containsAtLeast(u8, result.stdout, 1, want)) catch |err| {
+            std.debug.print("stdout: {s}\n", .{result.stdout});
+            std.debug.print("stderr: {s}\n", .{result.stderr});
+            return err;
+        };
+    }
 }
 
 test "print diff and current file contents" {
