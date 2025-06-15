@@ -100,27 +100,27 @@ test "respect ignore file and not print modified file" {
     var runner = try Runner.init(allocator);
     defer runner.deinit();
 
-    try runner.run(&.{ "git", "init" });
-    try runner.run(&.{ "git", "config", "user.email", "you@example.com" });
-    try runner.run(&.{ "git", "config", "user.name", "Your Name" });
-
-    try runner.writeFile("birds", "sparrow robin");
-    try runner.run(&.{ "git", "add", "birds" });
-    try runner.run(&.{ "git", "commit", "-m", "initial commit" });
-
-    try runner.writeFile("birds", "cardinal");
-    try runner.run(&.{ "git", "add", "birds" });
+    try runner.dash(
+        \\ git init
+        \\ git config user.email you@example.com
+        \\ git config user.name "Your Name"
+        \\ echo "sparrow robin" > birds
+        \\ git add birds
+        \\ git commit -m "initial commit"
+        \\ echo "cardinal" > birds
+        \\ git add birds
+    );
 
     {
         const result = try runner.ctx(&.{"init"});
-        defer allocator.free(result.stdout);
-        defer allocator.free(result.stderr);
+        allocator.free(result.stdout);
+        allocator.free(result.stderr);
     }
 
     {
         const result = try runner.ctx(&.{ "merge-base", "HEAD" });
-        defer allocator.free(result.stdout);
-        defer allocator.free(result.stderr);
+        allocator.free(result.stdout);
+        allocator.free(result.stderr);
     }
 
     {
@@ -129,7 +129,7 @@ test "respect ignore file and not print modified file" {
         defer allocator.free(result.stderr);
 
         const want = try std.mem.replaceOwned(u8, allocator,
-            \\Estimated token count: 59
+            \\Estimated token count: 46
             \\Merge base: HEAD
             \\Modified:
             \\{Tab}birds
@@ -150,7 +150,9 @@ test "respect ignore file and not print modified file" {
         };
     }
 
-    try runner.writeFile(".ctxignore", "birds");
+    try runner.dash(
+        \\ echo "birds" > .ctxignore
+    );
 
     {
         const result = try runner.ctx(&.{"status"});
@@ -158,7 +160,7 @@ test "respect ignore file and not print modified file" {
         defer allocator.free(result.stderr);
 
         const want =
-            \\Estimated token count: 51
+            \\Estimated token count: 37
             \\Merge base: HEAD
             \\Modified:
             \\Paths:
@@ -182,17 +184,17 @@ test "print diff and current file contents" {
     var runner = try Runner.init(allocator);
     defer runner.deinit();
 
-    try runner.run(&.{ "git", "init" });
-    try runner.run(&.{ "git", "config", "user.email", "you@example.com" });
-    try runner.run(&.{ "git", "config", "user.name", "Your Name" });
-    try runner.run(&.{ "git", "config", "diff.mnemonicPrefix", "false" });
-
-    try runner.writeFile("birds", "sparrow\nrobin\n");
-    try runner.run(&.{ "git", "add", "birds" });
-    try runner.run(&.{ "git", "commit", "-m", "initial commit" });
-
-    try runner.writeFile("birds", "sparrow\ncardinal\n");
-    try runner.run(&.{ "git", "add", "birds" });
+    try runner.dash(
+        \\ git init
+        \\ git config user.email you@example.com
+        \\ git config user.name "Your Name"
+        \\ git config diff.mnemonicPrefix false
+        \\ echo "sparrow\nrobin\n" > birds
+        \\ git add birds
+        \\ git commit -m "initial commit"
+        \\ echo "sparrow\ncardinal\n" > birds
+        \\ git add birds
+    );
 
     var result = try runner.ctx(&.{"init"});
     allocator.free(result.stdout);
@@ -211,13 +213,14 @@ test "print diff and current file contents" {
         \\
         \\```diff
         \\diff --git a/birds b/birds
-        \\index 739e843..ae9d5cc 100644
+        \\index 9bdcdf2..c99a016 100644
         \\--- a/birds
         \\+++ b/birds
-        \\@@ -1,2 +1,2 @@
+        \\@@ -1,3 +1,3 @@
         \\ sparrow
         \\-robin
         \\+cardinal
+        \\ 
         \\```
         \\
         \\# Files
@@ -225,6 +228,7 @@ test "print diff and current file contents" {
         \\```text path=birds
         \\sparrow
         \\cardinal
+        \\
         \\```
     ;
 

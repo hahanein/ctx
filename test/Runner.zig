@@ -22,18 +22,6 @@ pub fn deinit(self: *Runner) void {
     self.tmp_dir.cleanup();
 }
 
-/// Runs a command in the temporary directory.
-pub fn run(self: *const Runner, argv: []const []const u8) !void {
-    const result = try Child.run(.{ .argv = argv, .cwd_dir = self.tmp_dir.dir, .allocator = self.allocator });
-    defer self.allocator.free(result.stdout);
-    defer self.allocator.free(result.stderr);
-    std.testing.expect(result.term == .Exited and result.term.Exited == 0) catch |err| {
-        std.debug.print("stdout: {s}\n", .{result.stdout});
-        std.debug.print("stderr: {s}\n", .{result.stderr});
-        return err;
-    };
-}
-
 /// Runs a dash command in the temporary directory.
 pub fn dash(self: *const Runner, command_string: []const u8) !void {
     const result = try Child.run(.{ .argv = &.{ "dash", "-c", command_string }, .cwd_dir = self.tmp_dir.dir, .allocator = self.allocator });
@@ -53,12 +41,5 @@ pub fn ctx(self: *const Runner, argv: []const []const u8) !Child.RunResult {
     argv_[0] = self.exe_abs_path;
     @memcpy(argv_[1..], argv);
     return Child.run(.{ .argv = argv_, .cwd_dir = self.tmp_dir.dir, .allocator = self.allocator });
-}
-
-/// Writes a file to the temporary directory.
-pub fn writeFile(self: *const Runner, path: []const u8, data: []const u8) !void {
-    const file = try self.tmp_dir.dir.createFile(path, .{ .truncate = true });
-    defer file.close();
-    try file.writeAll(data);
 }
 
