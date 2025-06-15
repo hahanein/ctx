@@ -15,6 +15,8 @@ pub fn init(allocator: std.mem.Allocator) !Runner {
     const bin_path = try std.fs.realpathAlloc(allocator, "zig-out/bin");
     defer allocator.free(bin_path);
 
+    std.debug.print("path: {s}\n", .{current_path}); // TEST
+
     const path = try std.mem.concat(allocator, u8, &.{ current_path, ":", bin_path });
 
     var env_map = std.process.EnvMap.init(allocator);
@@ -36,7 +38,13 @@ pub fn deinit(self: *Runner) void {
 
 /// Runs a dash command in the temporary directory.
 pub fn dash(self: *const Runner, command_string: []const u8) !void {
-    const result = try Child.run(.{ .env_map = &self.env_map, .argv = &.{ "dash", "-c", command_string }, .cwd_dir = self.tmp_dir.dir, .allocator = self.allocator });
+    const result = try Child.run(.{
+        .env_map = &self.env_map,
+        .argv = &.{ "dash", "-c", command_string },
+        .cwd_dir = self.tmp_dir.dir,
+        .allocator = self.allocator,
+    });
+
     defer self.allocator.free(result.stdout);
     defer self.allocator.free(result.stderr);
 
@@ -49,6 +57,11 @@ pub fn dash(self: *const Runner, command_string: []const u8) !void {
 
 /// Runs a command in the temporary directory and returns the result.
 pub fn run(self: *const Runner, argv: []const []const u8) !Child.RunResult {
-    return Child.run(.{ .env_map = &self.env_map, .argv = argv, .cwd_dir = self.tmp_dir.dir, .allocator = self.allocator });
+    return Child.run(.{
+        .env_map = &self.env_map,
+        .argv = argv,
+        .cwd_dir = self.tmp_dir.dir,
+        .allocator = self.allocator,
+    });
 }
 
