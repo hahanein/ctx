@@ -7,11 +7,7 @@ test "print usage message and exit with usage error status" {
     var runner = try Runner.init(allocator);
     defer runner.deinit();
 
-    const result = runner.run(&.{"ctx"}) catch |err| {
-        std.debug.print("Child.run threw: {}\n", .{err});
-        return err;
-    };
-
+    const result = try runner.run(&.{"ctx"});
     defer allocator.free(result.stdout);
     defer allocator.free(result.stderr);
 

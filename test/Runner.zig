@@ -6,46 +6,28 @@ const Runner = @This();
 allocator: std.mem.Allocator,
 tmp_dir: std.testing.TmpDir,
 env_map: std.process.EnvMap,
-path: []u8,
 
 pub fn init(allocator: std.mem.Allocator) !Runner {
-    const current_path = try std.process.getEnvVarOwned(allocator, "PATH");
-    defer allocator.free(current_path);
+    var env_map = try std.process.getEnvMap(allocator);
+
+    const current_path = env_map.get("PATH") orelse return error.MissingPathEnvVar;
 
     const bin_path = try std.fs.realpathAlloc(allocator, "zig-out/bin");
     defer allocator.free(bin_path);
 
-    {
-        // Open the directory you want to list. "." means “current working dir”.
-        var dir = try std.fs.cwd().openDir(bin_path, .{});
-        defer dir.close();
-
-        // Create an iterator. `.max_depth = 1` means “don’t recurse”.
-        var it = try dir.iterate(allocator, .{ .max_depth = 1 });
-        defer it.deinit();
-
-        std.debug.print("All files in zig-out/bin\n", .{});
-        while (try it.next()) |entry| {
-            // entry.kind is .file, .dir, .sym_link, …
-            std.debug.print("{s}\n", .{entry.path});
-        }
-    }
-
     const path = try std.mem.concat(allocator, u8, &.{ current_path, ":", bin_path });
+    defer allocator.free(path);
 
-    var env_map = std.process.EnvMap.init(allocator);
     try env_map.put("PATH", path);
 
     return .{
         .allocator = allocator,
         .tmp_dir = std.testing.tmpDir(.{}),
-        .path = path,
         .env_map = env_map,
     };
 }
 
 pub fn deinit(self: *Runner) void {
-    self.allocator.free(self.path);
     self.env_map.deinit();
     self.tmp_dir.cleanup();
 }
