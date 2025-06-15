@@ -7,7 +7,7 @@ test "print usage message and exit with usage error status" {
     var runner = try Runner.init(allocator);
     defer runner.deinit();
 
-    const result = try runner.ctx(&.{});
+    const result = try runner.run(&.{"ctx"});
     defer allocator.free(result.stdout);
     defer allocator.free(result.stderr);
 
@@ -30,7 +30,7 @@ test "print version" {
     var runner = try Runner.init(allocator);
     defer runner.deinit();
 
-    const result = try runner.ctx(&.{"version"});
+    const result = try runner.run(&.{ "ctx", "version" });
     defer allocator.free(result.stdout);
     defer allocator.free(result.stderr);
 
@@ -64,7 +64,7 @@ test "print modified files" {
         \\ ctx merge-base HEAD~1
     );
 
-    const result = try runner.ctx(&.{"status"});
+    const result = try runner.run(&.{ "ctx", "status" });
     defer allocator.free(result.stdout);
     defer allocator.free(result.stderr);
 
@@ -110,7 +110,7 @@ test "respect ignore file and not print modified file" {
     );
 
     {
-        const result = try runner.ctx(&.{"status"});
+        const result = try runner.run(&.{ "ctx", "status" });
         defer allocator.free(result.stdout);
         defer allocator.free(result.stderr);
 
@@ -141,7 +141,7 @@ test "respect ignore file and not print modified file" {
     );
 
     {
-        const result = try runner.ctx(&.{"status"});
+        const result = try runner.run(&.{ "ctx", "status" });
         defer allocator.free(result.stdout);
         defer allocator.free(result.stderr);
 
@@ -185,7 +185,7 @@ test "print diff and current file contents" {
         \\ ctx merge-base HEAD
     );
 
-    const result = try runner.ctx(&.{"show"});
+    const result = try runner.run(&.{ "ctx", "show" });
     defer allocator.free(result.stdout);
     defer allocator.free(result.stderr);
 

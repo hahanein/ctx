@@ -47,12 +47,8 @@ pub fn dash(self: *const Runner, command_string: []const u8) !void {
     };
 }
 
-/// Runs a ctx command in the temporary directory and returns the result.
-pub fn ctx(self: *const Runner, argv: []const []const u8) !Child.RunResult {
-    var argv_ = try self.allocator.alloc([]const u8, 1 + argv.len);
-    defer self.allocator.free(argv_);
-    argv_[0] = "ctx";
-    @memcpy(argv_[1..], argv);
-    return Child.run(.{ .env_map = &self.env_map, .argv = argv_, .cwd_dir = self.tmp_dir.dir, .allocator = self.allocator });
+/// Runs a command in the temporary directory and returns the result.
+pub fn run(self: *const Runner, argv: []const []const u8) !Child.RunResult {
+    return Child.run(.{ .env_map = &self.env_map, .argv = argv, .cwd_dir = self.tmp_dir.dir, .allocator = self.allocator });
 }
 
