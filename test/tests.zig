@@ -3,7 +3,7 @@ const allocator = std.testing.allocator;
 const build_options = @import("build_options");
 const Runner = @import("Runner.zig");
 
-test "usage message with correct exit code" {
+test "print usage message and exit with usage error status" {
     var runner = try Runner.init(allocator);
     defer runner.deinit();
 
@@ -11,8 +11,19 @@ test "usage message with correct exit code" {
     defer allocator.free(result.stdout);
     defer allocator.free(result.stderr);
 
-    try std.testing.expect(result.term == .Exited and result.term.Exited == 2);
-    try std.testing.expect(std.mem.containsAtLeast(u8, result.stderr, 1, "ctx - A command line tool for building prompt context files"));
+    const want = "ctx - A command line tool for building prompt context files";
+
+    std.testing.expect(result.term == .Exited and result.term.Exited == 2) catch |err| {
+        std.debug.print("stdout: {s}\n", .{result.stdout});
+        std.debug.print("stderr: {s}\n", .{result.stderr});
+        return err;
+    };
+
+    std.testing.expect(std.mem.containsAtLeast(u8, result.stderr, 1, want)) catch |err| {
+        std.debug.print("stdout: {s}\n", .{result.stdout});
+        std.debug.print("stderr: {s}\n", .{result.stderr});
+        return err;
+    };
 }
 
 test "print version" {
@@ -24,10 +35,15 @@ test "print version" {
     defer allocator.free(result.stderr);
 
     const want = "ctx version v" ++ build_options.version;
-    try std.testing.expect(std.mem.containsAtLeast(u8, result.stdout, 1, want));
+
+    std.testing.expect(std.mem.containsAtLeast(u8, result.stdout, 1, want)) catch |err| {
+        std.debug.print("stdout: {s}\n", .{result.stdout});
+        std.debug.print("stderr: {s}\n", .{result.stderr});
+        return err;
+    };
 }
 
-test "print modified" {
+test "print modified files" {
     var runner = try Runner.init(allocator);
     defer runner.deinit();
 
@@ -69,7 +85,80 @@ test "print modified" {
     , "{Tab}", "\t");
     defer allocator.free(want);
 
-    try std.testing.expect(result.term == .Exited and result.term.Exited == 0);
-    try std.testing.expect(std.mem.containsAtLeast(u8, result.stdout, 1, want));
+    std.testing.expect(result.term == .Exited and result.term.Exited == 0) catch |err| {
+        std.debug.print("stdout: {s}\n", .{result.stdout});
+        std.debug.print("stderr: {s}\n", .{result.stderr});
+        return err;
+    };
+
+    std.testing.expect(std.mem.containsAtLeast(u8, result.stdout, 1, want)) catch |err| {
+        std.debug.print("stdout: {s}\n", .{result.stdout});
+        std.debug.print("stderr: {s}\n", .{result.stderr});
+        return err;
+    };
+}
+
+test "print diff and current file contents" {
+    var runner = try Runner.init(allocator);
+    defer runner.deinit();
+
+    try runner.run(&.{ "git", "init" });
+    try runner.run(&.{ "git", "config", "user.email", "you@example.com" });
+    try runner.run(&.{ "git", "config", "user.name", "Your Name" });
+
+    try runner.writeFile("birds", "sparrow\nrobin\n");
+    try runner.run(&.{ "git", "add", "birds" });
+    try runner.run(&.{ "git", "commit", "-m", "initial commit" });
+
+    try runner.writeFile("birds", "sparrow\ncardinal\n");
+    try runner.run(&.{ "git", "add", "birds" });
+
+    var result = try runner.ctx(&.{"init"});
+    allocator.free(result.stdout);
+    allocator.free(result.stderr);
+
+    try runner.writeFile(".ctxignore", ""); // FIXME(BW): Must be removed with #6
+
+    result = try runner.ctx(&.{ "merge-base", "main" });
+    allocator.free(result.stdout);
+    allocator.free(result.stderr);
+
+    result = try runner.ctx(&.{"show"});
+    defer allocator.free(result.stdout);
+    defer allocator.free(result.stderr);
+
+    const want =
+        \\# Diff
+        \\
+        \\```diff
+        \\diff --git c/birds i/birds
+        \\index 739e843..ae9d5cc 100644
+        \\--- c/birds
+        \\+++ i/birds
+        \\@@ -1,2 +1,2 @@
+        \\ sparrow
+        \\-robin
+        \\+cardinal
+        \\```
+        \\
+        \\# Files
+        \\
+        \\```text path=birds
+        \\sparrow
+        \\cardinal
+        \\```
+    ;
+
+    std.testing.expect(result.term == .Exited and result.term.Exited == 0) catch |err| {
+        std.debug.print("stdout: {s}\n", .{result.stdout});
+        std.debug.print("stderr: {s}\n", .{result.stderr});
+        return err;
+    };
+
+    std.testing.expect(std.mem.containsAtLeast(u8, result.stdout, 1, want)) catch |err| {
+        std.debug.print("stdout: {s}\n", .{result.stdout});
+        std.debug.print("stderr: {s}\n", .{result.stderr});
+        return err;
+    };
 }
 
